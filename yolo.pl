@@ -14,6 +14,8 @@ succAlpha(e,f).
 succAlpha(f,g).
 succAlpha(g,h).
 
+afficheLigne([]).
 afficheLigne([X|L]) :- write(X), write(' '), afficheLigne(L).
 
-afficheGrille()
+afficheGrille([]).
+afficheGrille([X|L]) :- afficheLigne(X), write_ln(''), afficheGrille(L).
