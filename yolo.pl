@@ -19,3 +19,8 @@ afficheLigne([X|L]) :- write(X), write(' '), afficheLigne(L).
 
 afficheGrille([]).
 afficheGrille([X|L]) :- afficheLigne(X), write_ln(''), afficheGrille(L).
+
+caseDansLigne(1, [V|_], V) :- !.
+caseDansLigne(C, [_|TS], V) :- C > 1, C1 is C-1, caseDansLigne(C1, TS, V).
+
+ligneDansGrille(L, T, V) :- caseDansLigne(L, T, V).
