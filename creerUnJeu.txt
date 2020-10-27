@@ -1,0 +1,24 @@
+il faut consult('moteurJ2J/moteur.pl') puis définir les prédicats :
+
+leCoupEstValide(C,L,G).
+
+partieGagnee(Val, G).
+
+toutesLesCasesDepart(N).
+
+grilleDeDepart(G).
+
+toutesLesCasesValides(Grille, _, _, LC2).
+
+saisieUnCoup(NomCol,NumLig).
+
+et copier coller :
+
+lanceJeu:-
+  init(6, g),                          %taille au choix
+  grilleDeDepart(G),
+	toutesLesCasesDepart(ListeCoups),
+	afficheGrille(G),nl,
+   writeln("L ordinateur est les x et vous etes les o."),
+   writeln("Quel camp doit debuter la partie ? "),read(Camp),
+	moteur(G,ListeCoups,Camp).           
