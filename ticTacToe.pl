@@ -52,7 +52,6 @@ initSuccAlpha(C, F) :- char_code(C, D), char_code(F, S),
 initSuccAlpha(C, F) :- char_code(C, D), char_code(F, S),
                       D >= S.
 
-
 initEquiv(D, C, F) :- char_code(C, DA), char_code(F, SA),
                          DA =< SA, D1 is D + 1, DA1 is DA + 1,
                          char_code(C1, DA1),
@@ -121,8 +120,8 @@ ligneFaite(Val, [Val|R]) :- ligneFaite(Val, R).
 % ?- ligneGagnante(x,[[x,-,x],[x,x,x],[-,o,-]],V).
 % V = 2 ;
 
-ligneGagnante(Val, [L1|_], 1) :- ligneFaite(Val, L1), !.
-ligneGagnante(Val, [_|R], NumLigne) :- ligneGagnante(Val, R, I), succNum(I,NumLigne).
+ligneGagnante(Val, [L1|_]) :- ligneFaite(Val, L1), !.
+ligneGagnante(Val, [_|R]) :- ligneGagnante(Val, R).
 
 
 
@@ -131,7 +130,7 @@ colonneFaite(Val, [[Val|_]]) :- !.
 colonneFaite(Val, [[Val|_]| R]) :- colonneFaite(Val, R).
 
 % Predicat : colonneGagnante/3
-colonneGagnante(Val, L, NumCol) :- transpose(L, L1), ligneGagnante(Val, L1, NumLigne), equiv(NumCol, NumLigne).
+colonneGagnante(Val, L) :- transpose(L, L1), ligneGagnante(Val, L1).
 
 
 transpose([[]|_], []) :- !.
@@ -145,14 +144,14 @@ transpose_1st_col([[H|T]|Rows], [H|Hs], [T|Ts]) :- transpose_1st_col(Rows, Hs, T
 diagonale([], 0, []).
 diagonale([L|LS], N, [V|R]) :- diagonale(LS, N1, R), N is N1 + 1, nth1(N, L, V).
 
-diagonaleGagnante(Val, L, dg) :- diagonale(L, _, D), ligneFaite(Val, D).
-diagonaleGagnante(Val, L, gd) :- reverse(L, L1), diagonale(L1, _, D), ligneFaite(Val, D).
+diagonaleGagnante(Val, L) :- diagonale(L, _, D), ligneFaite(Val, D).
+diagonaleGagnante(Val, L) :- reverse(L, L1), diagonale(L1, _, D), ligneFaite(Val, D).
 
 
 % Predicat partieGagnee/2
-partieGagnee(Val, G) :- ligneGagnante(Val, G, _).
-partieGagnee(Val, G) :- colonneGagnante(Val, G, _).
-partieGagnee(Val, G) :- diagonaleGagnante(Val, G, _).
+partieGagnee(Val, G) :- ligneGagnante(Val, G).
+partieGagnee(Val, G) :- colonneGagnante(Val, G).
+partieGagnee(Val, G) :- diagonaleGagnante(Val, G).
 
 
 
@@ -293,7 +292,7 @@ test(Col, Lig, Grille, Camp, _, ListeCoups) :-
 %% lanceJeu()
 %  lanceJeu permet de lancer une partie de tic tac toe.
 lanceJeu:-
-  init(2, c),                          %spécifique
+  init(3, c),                          %spécifique
   grilleDeDepart(G),                   %spécifique
 	toutesLesCasesDepart(ListeCoups),    %spécifique
 	afficheGrille(G),nl,                 %général
