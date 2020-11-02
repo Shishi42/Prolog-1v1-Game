@@ -14,16 +14,19 @@ leCoupEstValide(G, CL) :- 	coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col
 
 
 % Predicat : ligneFaite/2
-ligneFaite(Val, [Val]) :- !.
-ligneFaite(Val, [Val|R]) :- ligneFaite(Val, R).
+ligneDeN(Val, [Val|_], 0) :- !.
+ligneDeN(Val, [Val|R], N) :- N1 is N - 1, ligneDeN(Val, R, N1).
+
+ligneDe4(_, []).
+ligneDe4(Val, L) :- ligneDeN(Val, L, 4).
+ligneDe4(Val, [Val|R]) :- ligneDe4(Val, R).
 
 
 % Predicat : ligneGagnante/3
 % ?- ligneGagnante(x,[[x,-,x],[x,x,x],[-,o,-]],V).
 % V = 2 ;
 
-ligneGagnante(Val, [L1|_]) :- ligneFaite(Val, L1), !.
-ligneGagnante(Val, [_|R]) :- ligneGagnante(Val, R).
+ligneGagnante(Val, [L1|_]) :- ligneDe4(Val, L1), !.
 
 
 
