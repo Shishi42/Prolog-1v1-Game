@@ -1,3 +1,7 @@
+
+:- module(puissance4, [puissance4/0]).
+
+
 :- consult('../moteurJ2J/moteur.pl'), consult('../moteurJ2J/outils.pl').
 
 %%%%%%%%%%%%%%%%% Coups autorisés %%%%%%%%%%%%%%%%%
@@ -14,12 +18,12 @@ leCoupEstValide(G, CL) :- 	coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col
 
 
 % Predicat : ligneFaite/2
-ligneDeN(Val, [Val|_], 0) :- !.
+ligneDeN(Val, [Val|_], 1) :- !.
 ligneDeN(Val, [Val|R], N) :- N1 is N - 1, ligneDeN(Val, R, N1).
 
-ligneDe4(_, []).
+ligneDe4(_, []) :- fail.
 ligneDe4(Val, L) :- ligneDeN(Val, L, 4).
-ligneDe4(Val, [Val|R]) :- ligneDe4(Val, R).
+ligneDe4(Val, [_|R]) :- ligneDe4(Val, R).
 
 
 % Predicat : ligneGagnante/3
@@ -27,23 +31,28 @@ ligneDe4(Val, [Val|R]) :- ligneDe4(Val, R).
 % V = 2 ;
 
 ligneGagnante(Val, [L1|_]) :- ligneDe4(Val, L1), !.
+ligneGagnante(Val, [_|R]) :- ligneGagnante(Val, R), !.
 
-
-
-% Predicat : ligneFaite/2
-colonneFaite(Val, [[Val|_]]) :- !.
-colonneFaite(Val, [[Val|_]| R]) :- colonneFaite(Val, R).
 
 % Predicat : colonneGagnante/3
 colonneGagnante(Val, L) :- transpose(L, L1), ligneGagnante(Val, L1).
 
 
 % Predicats diagonaleDG/2 et diagonaleGD/2
-diagonale([], 0, []).
-diagonale([L|LS], N, [V|R]) :- diagonale(LS, N1, R), N is N1 + 1, nth1(N, L, V).
+diagonale([], _, []).
+diagonale([L|LS], N, [V|R]) :-  N1 is N + 1, diagonale(LS, N1, R), nth1(N1, L, V).
 
-diagonaleGagnante(Val, L) :- diagonale(L, _, D), ligneFaite(Val, D).
-diagonaleGagnante(Val, L) :- reverse(L, L1), diagonale(L1, _, D), ligneFaite(Val, D).
+diagonaleGagnante2(_, []) :- fail.
+diagonaleGagnante2(Val, L) :- diagonale(L, 0, D), ligneDe4(Val, D).
+diagonaleGagnante2(Val, [_|R]) :- diagonaleGagnante2(Val, R).
+
+
+diagonaleGagnante3(Val, L) :- diagonaleGagnante2(Val, L).
+diagonaleGagnante3(Val, L) :- transpose(L, L1), diagonaleGagnante2(Val, L1).
+
+
+diagonaleGagnante(Val, L) :- diagonaleGagnante3(Val, L).
+diagonaleGagnante(Val, L) :- reverse(L, L1), diagonaleGagnante3(Val, L1).
 
 
 % Predicat partieGagnee/2
@@ -95,24 +104,24 @@ toutesLesCasesValides(Grille, _, _, LC2) :-
 	listeLigne(L), listeColonne(C), combine(C, L, N),
   include(leCoupEstValide(Grille), N, LC2).
 
+derniereLigne2([C|_], 0) :- \+ caseVide(C), !.
+derniereLigne2([], 0) :- !.
+derniereLigne2([_|R], NumLigne) :- derniereLigne2(R, N), NumLigne is N + 1.
+
+derniereLigne(G, NomColonne, NumLigne) :-
+	equiv(NomColonne, NumColonne),
+	transpose(G, G1), nth1(NumColonne, G1, L),
+	derniereLigne2(L, NumLigne).
 
 
-
-
-saisieUnCoup(NomCol,NumLig) :-
+saisieUnCoup(G, NomCol,NumLig) :-
 	writeln("entrez le nom de la colonne a jouer (a,b,c) :"),
 	read(NomCol), nl,
-	writeln("entrez le numero de ligne a jouer (1, 2 ou 3) :"),
-	read(NumLig),nl.
+	derniereLigne(G, NomCol, NumLig).
 
 
 %% lanceJeu()
 %  lanceJeu permet de lancer une partie de tic tac toe.
-lanceJeu:-
-  init(6, g),                          %spécifique
-  grilleDeDepart(G),                   %spécifique
-	toutesLesCasesDepart(ListeCoups),    %spécifique
-	afficheGrille(G),nl,                 %général
-   writeln("L ordinateur est les x et vous etes les o."),
-   writeln("Quel camp doit debuter la partie ? "),read(Camp),
-	moteur(G,ListeCoups,Camp).           %général
+puissance4:-
+	init(6, g),
+	lanceJeu.

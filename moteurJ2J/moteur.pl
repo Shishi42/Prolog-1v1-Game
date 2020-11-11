@@ -1,3 +1,6 @@
+
+
+
 :- consult('../moteurJ2J/outils.pl').
 
 %%%%%%%%%%%%%%%%% Visualisation %%%%%%%%%%%%%%%%%
@@ -65,13 +68,13 @@ initEquiv(_, C, F) :- char_code(C, DA), char_code(F, SA),
 % Predicat : ligneDeGrille(NumLigne, Grille, Ligne).
 % Satisfait si Ligne est la ligne numero NumLigne dans la Grille
 ligneDeGrille(1, [Test |_], Test) :- !.
-ligneDeGrille(NumLigne, [_|Reste],Test) :- succNum(I, NumLigne),
-		ligneDeGrille(I,Reste,Test).
+ligneDeGrille(NumLigne, [_|Reste], Test) :- succNum(I, NumLigne),
+		ligneDeGrille(I, Reste, Test).
 
 % Predicat : caseDeLigne(Col, Liste, Valeur).
 % Satisfait si Valeur est dans la colonne Col de la Liste
-caseDeLigne(a, [A|_],A) :- !.
-caseDeLigne(Col, [_|Reste],Test) :- succAlpha(I, Col),caseDeLigne(I,Reste, Test).
+caseDeLigne(a, [A|_], A) :- !.
+caseDeLigne(Col, [_|Reste], Test) :- succAlpha(I, Col), caseDeLigne(I,Reste, Test).
 
 
 % Predicat : caseDeGrille(NumCol, NumLigne, Grille, Case).
@@ -169,7 +172,7 @@ moteur(Grille, [Premier|ListeCoups], Camp) :-
 moteur(Grille, ListeCoups, Camp) :-
   campCPU(CPU),
   campAdverse(Camp, CPU),
-  saisieUnCoup(Col,Lig),
+  saisieUnCoup(Grille, Col,Lig),
   test(Col, Lig, Grille, Camp, CPU, ListeCoups).
 
 
@@ -185,3 +188,12 @@ test(Col, Lig, Grille, Camp, _, ListeCoups) :-
   \+ leCoupEstValide(Col, Lig, Grille),
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
+
+
+lanceJeu :-
+  grilleDeDepart(G),
+  toutesLesCasesDepart(ListeCoups),
+  afficheGrille(G),nl,
+   writeln("L ordinateur est les x et vous etes les o."),
+   writeln("Quel camp doit debuter la partie ? "),read(Camp),
+  moteur(G,ListeCoups,Camp).
