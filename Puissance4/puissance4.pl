@@ -1,62 +1,134 @@
 
-:- module(puissance4, [puissance4/0]).
+/** <module> Puissance 4
+ *
+ *  Ce module permet de jouer au jeu de Puissance 4
+ *
+ *  @author Mano Brabant
+ */
+:- module(jeu, []).
 
 
-:- consult('../moteurJ2J/moteur.pl'), consult('../moteurJ2J/outils.pl').
-
-%%%%%%%%%%%%%%%%% Coups autorisés %%%%%%%%%%%%%%%%%
-
-% Predicat : leCoupEstValide/3
-leCoupEstValide(C,L,G) :- caseVide(Cv), caseDeGrille(C,L,G,Cv), succNum(L, L2), caseDeGrille(C,L2,G,Cv2), \+ caseVide(Cv2).
-leCoupEstValide(C,L,G) :- caseVide(Cv), caseDeGrille(C,L,G,Cv), \+ succNum(L, _).
+:- consult('../moteurJ2J/outils.pl').
 
 
-% Predicat : leCoupEstValide/2
-leCoupEstValide(G, CL) :- 	coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col, Lig, G).
+%% puissance4()
+%
+%  Cette méthode permet de lancer une partie de Puissance 4.
+puissance4:-
+	moteur:init(6, g),
+	lanceJeu.
+
+
+%% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
+%
+% Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
+%
+% @param Colonne La colonne de la case à vérifier
+% @param Ligne La ligne de la case à vérifier
+% @param Grille La grille dans laquelle on vérifie la case
+leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), moteur:succNum(L, L2), moteur:caseDeGrille(C,L2,G,Cv2), \+ moteur:caseVide(Cv2).
+leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), \+ moteur:succNum(L, _).
+
+
+%% leCoupEstValide(+Grille:Grille, +Case:Case)
+%
+% Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
+%
+% @param Grille La grille dans laquelle on vérifié la case
+% @param Case La case à vérifier
+% @see [[leCoupEstValide/3]]
+leCoupEstValide(G, CL) :- outils:coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col, Lig, G).
 
 %%%%%%%%%%%%%%%%% Moteur et règles %%%%%%%%%%%%%%%%%
 
 
-% Predicat : ligneFaite/2
+%% ligneDeN(+Val:any, Liste:list, +NbRepetition:int)
+%
+% Ce prédicat est satisfait si les nbRepetition premier elements de la liste sont Val
+%
+% @param Val La valeur a vérifier
+% @param Liste La liste qui contient les elements
+% @param NbRepetition Le nombre de premier elements qui doivent être Val
 ligneDeN(Val, [Val|_], 1) :- !.
 ligneDeN(Val, [Val|R], N) :- N1 is N - 1, ligneDeN(Val, R, N1).
 
+
+%% ligneDe4(+Val:any, Ligne:list)
+%
+% Ce prédicat est satisfait si une ligne contient 4 elements Val consécutif
+%
+% @param Val La valeur a vérifier
+% @param Ligne La ligne à vérifier
 ligneDe4(_, []) :- fail.
 ligneDe4(Val, L) :- ligneDeN(Val, L, 4).
 ligneDe4(Val, [_|R]) :- ligneDe4(Val, R).
 
 
-% Predicat : ligneGagnante/3
-% ?- ligneGagnante(x,[[x,-,x],[x,x,x],[-,o,-]],V).
-% V = 2 ;
-
+%% ligneGagnante(+Val:char, +Grille:Grille)
+%
+% Cette méthode permet de savoir si une grille contient une ligne gagnante pour un joueur
+%
+% @param Val La valeur à vérifier
+% @param Grille La grille à vérifier
 ligneGagnante(Val, [L1|_]) :- ligneDe4(Val, L1), !.
 ligneGagnante(Val, [_|R]) :- ligneGagnante(Val, R), !.
 
 
-% Predicat : colonneGagnante/3
-colonneGagnante(Val, L) :- transpose(L, L1), ligneGagnante(Val, L1).
+
+%% colonneGagnante(+Val:char, +Grille:Grille)
+%
+% Cette méthode permet de savoir si une grille contient une colonne gagnante pour un joueur
+%
+% @param Val La valeur à vérifier
+% @param Grille La grille à vérifier
+colonneGagnante(Val, L) :- outils:transpose(L, L1), ligneGagnante(Val, L1).
 
 
-% Predicats diagonaleDG/2 et diagonaleGD/2
-diagonale([], _, []).
+
+%% diagonale(+Grille:Grille, ?NbElement:int, +Ligne:Ligne)
+%
+% Cette méthode permet de récupérer une diagonale dans une grille donnée
+%
+% @param Grille La grille où l'on va récupérer une diagonale
+% @param NbElemtn Le nombre d'éléments dans la diagonale
+% @param Ligne La diagonale récupéréediagonale([], _, []).
 diagonale([L|LS], N, [V|R]) :-  N1 is N + 1, diagonale(LS, N1, R), nth1(N1, L, V).
 
+
+
+%% diagonaleGagnante(+Val:char, +Grille:Grille)
+%
+% Cette méthode permet de savoir si une des diagonale (haut-gauche->bas-droite)
+% de la grille contient 4 même valeur consécutive
+%
+% @param Val La valeur à vérifier
+% @param Grille La grille à vérifier
 diagonaleGagnante2(_, []) :- fail.
 diagonaleGagnante2(Val, L) :- diagonale(L, 0, D), ligneDe4(Val, D).
 diagonaleGagnante2(Val, [_|R]) :- diagonaleGagnante2(Val, R).
 
 
-diagonaleGagnante3(Val, L) :- diagonaleGagnante2(Val, L).
-diagonaleGagnante3(Val, L) :- transpose(L, L1), diagonaleGagnante2(Val, L1).
+
+%% diagonaleGagnante(+Val:char, +Grille:Grille)
+%
+% Cette méthode permet de savoir si une grille contient une diagonale gagnante pour un joueur
+%
+% @param Val La valeur à vérifier
+% @param Grille La grille à vérifier
+diagonaleGagnante(Val, L) :- 																									diagonaleGagnante2(Val, L).
+diagonaleGagnante(Val, L) :- 													outils:reverse(L, L1),	diagonaleGagnante2(Val, L1).
+diagonaleGagnante(Val, L) :- outils:transpose(L, L1), 												diagonaleGagnante2(Val, L1).
+diagonaleGagnante(Val, L) :- outils:transpose(L, L1), outils:reverse(L1, L2),	diagonaleGagnante2(Val, L2).
 
 
-diagonaleGagnante(Val, L) :- diagonaleGagnante3(Val, L).
-diagonaleGagnante(Val, L) :- reverse(L, L1), diagonaleGagnante3(Val, L1).
 
 
-% Predicat partieGagnee/2
-partieGagnee(Val, G) :- ligneGagnante(Val, G).
+%% partieGagnee(+Val:char, +Grille:Grille)
+%
+% Cette méthode permet de savoir si une grille est gagnante pour un joueur
+%
+% @param Val La valeur à vérifier
+% @param Grille La grille à vérifierpartieGagnee(Val, G) :- ligneGagnante(Val, G).
 partieGagnee(Val, G) :- colonneGagnante(Val, G).
 partieGagnee(Val, G) :- diagonaleGagnante(Val, G).
 
@@ -65,63 +137,87 @@ partieGagnee(Val, G) :- diagonaleGagnante(Val, G).
 
 
 
-toutesLesCasesDepart(N) :- listeColonne(C), combine(C, [6], N).
+%% toutesLesCasesDepart(?ListeCases:list)
+%
+% Cette méthode permet de récupérer toutes les cases de départ
+%
+% @param ListeCases La liste des cases où l'on peut jouer
+toutesLesCasesDepart(N) :- listeColonne(C), outils:combine(C, [6], N).
 
-listeLigne2([NL], NL) :- sizeLine(NL), !.
-listeLigne2([N|L], N) :- succNum(N, V), listeLigne2(L, V).
+listeLigne2([NL], NL) :- moteur:sizeLine(NL), !.
+listeLigne2([N|L], N) :- moteur:succNum(N, V), listeLigne2(L, V).
 
+
+%% listeLigne(?Lignes:list)
+%
+% Cette méthode permet de récupérer toutes les lignes du jeu
+%
+% @param Lignes La liste des numéros de ligne
 listeLigne(L) :- listeLigne2(L, 1).
 
 
-listeColonne2([NL], NL) :- sizeColumn(NL), !.
-listeColonne2([N|L], N) :- succAlpha(N, V), listeColonne2(L, V).
+listeColonne2([NL], NL) :- moteur:sizeColumn(NL), !.
+listeColonne2([N|L], N) :- moteur:succAlpha(N, V), listeColonne2(L, V).
 
+
+%% listeColonne(?Colonnes:list)
+%
+% Cette méthode permet de récupérer toutes les colonnes du jeu
+%
+% @param Colonnes La liste des noms de colonne
 listeColonne(L) :- listeColonne2(L, a).
 
 
-grilleDeDepart(G) :- size(SL, SCA), equiv(SCA, SC), replicate(-, SC, L), replicate(L, SL, G).
+%% grilleDeDepart(?Grille:Grille)
+%
+% Cette méthode permet de récupérer la grille de départ du jeu
+%
+% @param Grille La grille de départ
+grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
+	outils:replicate(-, SC, L), outils:replicate(L, SL, G).
 
 
 
 
-% toutesLesCasesValides(Grille, LC1, C, LC2).
-% Se verifie si l'on peut jouer dans la case C de Grille et que la liste
-% LC1 est une liste composee de toutes les cases de LC2 et de C.
-% Permet de dire si la case C est une case ou l'on peut jouer, en evitant
-% de jouer deux fois dans la meme case.
-%toutesLesCasesValides(Grille, LC1, C, LC2) :-
-%	coordonneesOuListe(Col, Lig, C),
-%	leCoupEstValide(Col, Lig, Grille),
-%	duneListeALautre(LC1, C, LC2).
 
-
-% toutesLesCasesValides(Grille, LC1, C, LC2).
-% Se verifie si l'on peut jouer dans la case C de Grille et que la liste
-% LC1 est une liste composee de toutes les cases de LC2 et de C.
-% Permet de dire si la case C est une case ou l'on peut jouer, en evitant
-% de jouer deux fois dans la meme case.
+%% toutesLesCasesValides(+Grille:Grille, +ListeCoups:list, +Case:list, ?NouveauListeCoups:list)
+%
+% Cette méthode permet de récupérer touts les coups disponibles pour le prochain joueur
+%
+% @param Grille La grille dans laquelle on joue
+% @param ListeCoups L'ancienne liste des coups
+% @param Case La case ou l'on veut jouer
+% @param NouveauListeCoups La nouvelle liste des coups
 toutesLesCasesValides(Grille, _, _, LC2) :-
-	listeLigne(L), listeColonne(C), combine(C, L, N),
+	listeLigne(L), listeColonne(C), outils:combine(C, L, N),
   include(leCoupEstValide(Grille), N, LC2).
 
-derniereLigne2([C|_], 0) :- \+ caseVide(C), !.
+derniereLigne2([C|_], 0) :- \+ moteur:caseVide(C), !.
 derniereLigne2([], 0) :- !.
 derniereLigne2([_|R], NumLigne) :- derniereLigne2(R, N), NumLigne is N + 1.
 
+
+%% derniereLigne(+Grille:Grille, +NomColonne:char, ?NumLigne:int)
+%
+% Cette méthode permet récupérer le numéro de ligne de la dernière case vide d'une colonne
+%
+% @param Grille La grille où chercher
+% @param NomColonne Le nom de la colonne dans laquelle on cherche la dernière case vide
+% @param NumLigne Le numéro de la ligne où se trouve la dernière case vide
 derniereLigne(G, NomColonne, NumLigne) :-
-	equiv(NomColonne, NumColonne),
-	transpose(G, G1), nth1(NumColonne, G1, L),
+	moteur:equiv(NomColonne, NumColonne),
+	outils:transpose(G, G1), nth1(NumColonne, G1, L),
 	derniereLigne2(L, NumLigne).
 
 
+%% saisieUnCoup(+Grille:Grille, ?NomColonne:char, ?NumLigne:int)
+%
+% Cette méthode permet de demander à l'utilisateur de saisir un coup
+%
+% @param Grille La grille dans laquelle le joueur va jouer son coup
+% @param NomColonne Le nom de la colonne dans laquelle le joueur va jouer son coup
+% @param NumLigne Le numéro de la ligne dans laquelle le joueur va jouer son coup
 saisieUnCoup(G, NomCol,NumLig) :-
 	writeln("entrez le nom de la colonne a jouer (a,b,c) :"),
 	read(NomCol), nl,
 	derniereLigne(G, NomCol, NumLig).
-
-
-%% lanceJeu()
-%  lanceJeu permet de lancer une partie de tic tac toe.
-puissance4:-
-	init(6, g),
-	lanceJeu.

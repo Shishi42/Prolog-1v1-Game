@@ -1,31 +1,51 @@
 
-:- module(ticTacToe, [ticTacToe/0]).
+/** <module> TicTacToe
+ *
+ *  Ce module permet de jouer au jeu de Tic-Tac-Toe
+ *
+ *  @author Mano Brabant
+ */
+:- module(jeu, []).
 
-:- consult('../moteurJ2J/moteur.pl'), consult('../moteurJ2J/outils.pl').
 
+:- consult('../moteurJ2J/outils.pl').
+
+
+%% ticTacToe()
+%
+%  Cette méthode permet de lancer une partie de tic tac toe.
+ticTacToe :-
+  moteur:init(3, c),
+	lanceJeu.
 
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
 %
-% Cette méthode permet de savoir si une case est valide dans une grille donnée
+% Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
 %
 % @param Colonne La colonne de la case à vérifier
 % @param Ligne La ligne de la case à vérifier
 % @param Grille La grille dans laquelle on vérifie la case
-leCoupEstValide(C,L,G) :- caseVide(Cv), caseDeGrille(C,L,G,Cv).
+leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv).
 
 
 
-% Predicat : leCoupEstValide/2
-leCoupEstValide(G, CL) :- 	coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col, Lig, G).
-
-
-
-%% ligneFaite(+Val:char, +Ligne:Ligne)
+%% leCoupEstValide(+Grille:Grille, +Case:Case)
 %
-% Cette méthode permet de savoir si une ligne contient uniquement une valeur donnée
+% Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
 %
-% @param Val La valeur à vérifier
+% @param Grille La grille dans laquelle on vérifié la case
+% @param Case La case à vérifier
+% @see [[leCoupEstValide/3]]
+leCoupEstValide(G, CL) :- outils:coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col, Lig, G).
+
+
+
+%% ligneFaite(+Val:char, +Ligne:list)
+%
+% Ce prédicat est satisfait si toutes les valeur de la liste sont les mêmes
+%
+% @param Val La valeur dans la liste
 % @param Ligne La ligne à vérifier
 ligneFaite(Val, [Val]).
 ligneFaite(Val, [Val|R]) :- ligneFaite(Val, R).
@@ -47,7 +67,7 @@ ligneGagnante(Val, [_|R]) :- ligneGagnante(Val, R).
 %
 % @param Val La valeur à vérifier
 % @param Grille La grille à vérifier
-colonneGagnante(Val, L) :- transpose(L, L1), ligneGagnante(Val, L1).
+colonneGagnante(Val, L) :- outils:transpose(L, L1), ligneGagnante(Val, L1).
 
 
 %% diagonale(+Grille:Grille, ?NbElement:int, +Ligne:Ligne)
@@ -67,8 +87,8 @@ diagonale([L|LS], N, [V|R]) :- diagonale(LS, N1, R), N is N1 + 1, nth1(N, L, V).
 %
 % @param Val La valeur à vérifier
 % @param Grille La grille à vérifier
-diagonaleGagnante(Val, L) :- diagonale(L, _, D), ligneFaite(Val, D).
-diagonaleGagnante(Val, L) :- reverse(L, L1), diagonale(L1, _, D), ligneFaite(Val, D).
+diagonaleGagnante(Val, L) :- 									diagonale(L, _, D), ligneFaite(Val, D).
+diagonaleGagnante(Val, L) :- reverse(L, L1), 	diagonale(L1, _, D), ligneFaite(Val, D).
 
 
 
@@ -89,25 +109,29 @@ partieGagnee(Val, G) :- diagonaleGagnante(Val, G).
 % Cette méthode permet de récupérer toutes les cases de départ
 %
 % @param ListeCases La liste des cases où l'on peut jouer
-toutesLesCasesDepart(N) :- listeLigne(L), listeColonne(C), combine(C, L, N).
+toutesLesCasesDepart(N) :- listeLigne(L), listeColonne(C), outils:combine(C, L, N).
 
 
-listeLigne2([NL], NL) :- sizeLine(NL), !.
-listeLigne2([N|L], N) :- succNum(N, V), listeLigne2(L, V).
+listeLigne2([NL], NL) :- moteur:sizeLine(NL), !.
+listeLigne2([N|L], N) :- moteur:succNum(N, V), listeLigne2(L, V).
 
 %% listeLigne(?Lignes:list)
 %
 % Cette méthode permet de récupérer toutes les lignes du jeu
+%
+% @param Lignes La liste des numéros de ligne
 listeLigne(L) :- listeLigne2(L, 1).
 
 
 
-listeColonne2([NL], NL) :- sizeColumn(NL), !.
-listeColonne2([N|L], N) :- succAlpha(N, V), listeColonne2(L, V).
+listeColonne2([NL], NL) :- moteur:sizeColumn(NL), !.
+listeColonne2([N|L], N) :- moteur:succAlpha(N, V), listeColonne2(L, V).
 
 %% listeColonne(?Colonnes:list)
 %
 % Cette méthode permet de récupérer toutes les colonnes du jeu
+%
+% @param Colonnes La liste des noms de colonne
 listeColonne(L) :- listeColonne2(L, a).
 
 %% grilleDeDepart(?Grille:Grille)
@@ -115,12 +139,13 @@ listeColonne(L) :- listeColonne2(L, a).
 % Cette méthode permet de récupérer la grille de départ du jeu
 %
 % @param Grille La grille de départ
-grilleDeDepart(G) :- size(SL, SCA), equiv(SCA, SC), replicate(-, SC, L), replicate(L, SL, G).
+grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
+	outils:replicate(-, SC, L), outils:replicate(L, SL, G).
 
 
 
 
-%% toutesLesCasesValides(?Grille:Grille, +ListeCoups:list, +Case:list, ?NouveauListeCoups:list)
+%% toutesLesCasesValides(+Grille:Grille, +ListeCoups:list, +Case:list, ?NouveauListeCoups:list)
 %
 % Cette méthode permet de récupérer touts les coups disponibles pour le prochain joueur
 %
@@ -129,7 +154,7 @@ grilleDeDepart(G) :- size(SL, SCA), equiv(SCA, SC), replicate(-, SC, L), replica
 % @param Case La case ou l'on veut jouer
 % @param NouveauListeCoups La nouvelle liste des coups
 toutesLesCasesValides(Grille, _, _, LC2) :-
-	listeLigne(L), listeColonne(C), combine(C, L, N),
+	listeLigne(L), listeColonne(C), outils:combine(C, L, N),
   include(leCoupEstValide(Grille), N, LC2).
 
 
@@ -145,11 +170,3 @@ saisieUnCoup(_, NomCol,NumLig) :-
 	read(NomCol), nl,
 	writeln("entrez le numero de ligne a jouer (1, 2 ou 3) :"),
 	read(NumLig),nl.
-
-
-%% ticTacToe()
-%
-%  Cette méthode permet de lancer une partie de tic tac toe.
-ticTacToe:-
-  init(3, c),
-	lanceJeu.

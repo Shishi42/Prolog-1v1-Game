@@ -1,9 +1,35 @@
 
 
+/** <module> Moteur
+ *
+ *  Ce module permet de lancer des jeux à 2 joueurs
+ *
+ *  @author Mano Brabant
+ */
+:- module(moteur, [lanceJeu/1]).
 
-:- consult('../moteurJ2J/outils.pl').
+lastFile('').
 
-%%%%%%%%%%%%%%%%% Visualisation %%%%%%%%%%%%%%%%%
+:- dynamic(lastFile/1).
+
+loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
+  retractall(lastFile(LastFile)), assert(lastFile(File)).
+
+
+
+%% lanceJeu(+File:string)
+%
+%  Cette méthode permet de lancer une partie de jeu à 2 joueurs.
+%
+% @param File le fichier du jeu
+lanceJeu(File) :-
+  loadJeu(File),
+  jeu:grilleDeDepart(G),
+  jeu:toutesLesCasesDepart(ListeCoups),
+  afficheGrille(G),nl,
+   writeln("L ordinateur est les x et vous etes les o."),
+   writeln("Quel camp doit debuter la partie ? "),read(Camp),
+  moteur(G,ListeCoups,Camp).
 
 
 %% afficheLigne(+List:list)
@@ -124,8 +150,8 @@ campAdverse(x,o).
 campAdverse(o,x).
 
 joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
-	coordonneesOuListe(Col, Lig, Case),
-	leCoupEstValide(Col, Lig, GrilleDep),
+	outils:coordonneesOuListe(Col, Lig, Case),
+	jeu:leCoupEstValide(Col, Lig, GrilleDep),
 	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr),
 	nl, afficheGrille(GrilleArr), nl.
 
@@ -146,13 +172,13 @@ joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 % cas gagnant pour le joueur
 moteur(Grille,L,Camp):-
   write(L), nl,
-	partieGagnee(Camp, Grille), nl,
+	jeu:partieGagnee(Camp, Grille), nl,
 	write('le camp '), write(Camp), write(' a gagne').
 
 % cas gagnant pour le joueur adverse
 moteur(Grille,_,Camp):-
 	campAdverse(CampGagnant, Camp),
-	partieGagnee(CampGagnant, Grille), nl,
+	jeu:partieGagnee(CampGagnant, Grille), nl,
 	write('le camp '), write(CampGagnant), write(' a gagne').
 
 % cas de match nul, plus de coups jouables possibles
@@ -164,7 +190,7 @@ moteur(Grille, [Premier|ListeCoups], Camp) :-
 	campCPU(Camp),
   write(Premier), nl,
 	joueLeCoup(Premier, Camp, Grille, GrilleArr),
-  toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
+  jeu:toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
 	campAdverse(AutreCamp, Camp),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
 
@@ -172,28 +198,19 @@ moteur(Grille, [Premier|ListeCoups], Camp) :-
 moteur(Grille, ListeCoups, Camp) :-
   campCPU(CPU),
   campAdverse(Camp, CPU),
-  saisieUnCoup(Grille, Col,Lig),
+  jeu:saisieUnCoup(Grille, Col,Lig),
   test(Col, Lig, Grille, Camp, CPU, ListeCoups).
 
 
 % TODO :: Donner un vrai nom au prédicat
 test(Col, Lig, Grille, Camp, CPU, ListeCoups) :-
-  leCoupEstValide(Col, Lig, Grille),
+  jeu:leCoupEstValide(Col, Lig, Grille),
   joueLeCoup([Col,Lig], Camp, Grille, GrilleArr),
-  toutesLesCasesValides(GrilleArr, ListeCoups, [Col, Lig], ListeCoupsNew),
+  jeu:toutesLesCasesValides(GrilleArr, ListeCoups, [Col, Lig], ListeCoupsNew),
   moteur(GrilleArr, ListeCoupsNew, CPU).
 
 
 test(Col, Lig, Grille, Camp, _, ListeCoups) :-
-  \+ leCoupEstValide(Col, Lig, Grille),
+  \+ jeu:leCoupEstValide(Col, Lig, Grille),
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
-
-
-lanceJeu :-
-  grilleDeDepart(G),
-  toutesLesCasesDepart(ListeCoups),
-  afficheGrille(G),nl,
-   writeln("L ordinateur est les x et vous etes les o."),
-   writeln("Quel camp doit debuter la partie ? "),read(Camp),
-  moteur(G,ListeCoups,Camp).
