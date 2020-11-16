@@ -14,9 +14,8 @@
 %% puissance4()
 %
 %  Cette méthode permet de lancer une partie de Puissance 4.
-puissance4:-
-	moteur:init(6, g),
-	lanceJeu.
+initJeu():-
+	moteur:init(6, g).
 
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)

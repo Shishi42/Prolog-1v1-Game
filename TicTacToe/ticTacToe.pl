@@ -14,9 +14,8 @@
 %% ticTacToe()
 %
 %  Cette méthode permet de lancer une partie de tic tac toe.
-ticTacToe :-
-  moteur:init(3, c),
-	lanceJeu.
+initJeu() :-
+  moteur:init(3, c).
 
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
@@ -143,7 +142,12 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
 	outils:replicate(-, SC, L), outils:replicate(L, SL, G).
 
 
+terminal(a).
 
+eval(G, J, 1000) :- partieGagnee(J, G).
+
+eval([[_,_,_],[_,Joueur,_],[_,_,_]], Joueur, 9) :- !.
+eval(_,_,5) :- !.
 
 %% toutesLesCasesValides(+Grille:Grille, +ListeCoups:list, +Case:list, ?NouveauListeCoups:list)
 %

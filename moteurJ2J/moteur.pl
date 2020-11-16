@@ -24,6 +24,7 @@ loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
 % @param File le fichier du jeu
 lanceJeu(File) :-
   loadJeu(File),
+  jeu:initJeu(),
   jeu:grilleDeDepart(G),
   jeu:toutesLesCasesDepart(ListeCoups),
   afficheGrille(G),nl,
@@ -138,8 +139,36 @@ coupJoueDansGrille(NCol, NLig, Val, [X|Reste1], [X|Reste2]):- succNum(I, NLig),
 %%%%%%%%%%%%%%%%% Moteur et règles %%%%%%%%%%%%%%%%%
 
 
+minmax(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
+minmax(Joueur, _, _, _, Grille, E) :- jeu:terminal(Grille), jeu:eval(Grille, Joueur, E), !.
+
+minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
+
+  jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
+  campAdverse(Joueur, Adv),
+  maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
+  P1 is Profondeur - 1,
+  maplist(minmax(Adv, P1, max), _, GrilleArr, Es),
+  max_list(Es, E),
+  outils:associe(GrilleArr, Es, GrilleEval),
+  include(=([_, E]), GrilleEval, GrilleA),
+  nth1(1, GrilleA, GrilleF),
+  nth1(1, GrilleF, GrilleFin).
 
 
+
+minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
+
+  jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
+  campAdverse(Joueur, Adv),
+  maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
+  P1 is Profondeur - 1,
+  maplist(minmax(Adv, P1, min), _, GrilleArr, Es),
+  min_list(Es, E),
+  outils:associe(GrilleArr, Es, GrilleEval),
+  include(=([_, E]), GrilleEval, GrilleA),
+  nth1(1, GrilleA, GrilleF),
+  nth1(1, GrilleF, GrilleFin).
 
 %%%%%%%%%%%%%%%%% Joueur artificiel %%%%%%%%%%%%%%%%%
 
@@ -149,11 +178,12 @@ campCPU(x).
 campAdverse(x,o).
 campAdverse(o,x).
 
+joueLeCoup2(Valeur, GrilleDep, GrilleArr, Case) :- joueLeCoup(Case, Valeur, GrilleDep, GrilleArr).
+
 joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 	outils:coordonneesOuListe(Col, Lig, Case),
 	jeu:leCoupEstValide(Col, Lig, GrilleDep),
-	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr),
-	nl, afficheGrille(GrilleArr), nl.
+	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr).
 
 %saisieUnCoupValide(Col,Lig,Grille):-
 %	saisieUnCoup(Col,Lig),
@@ -188,10 +218,11 @@ moteur(_,[],_) :-nl, write('game over').
 % cas ou l ordinateur doit jouer
 moteur(Grille, [Premier|ListeCoups], Camp) :-
 	campCPU(Camp),
-  write(Premier), nl,
-	joueLeCoup(Premier, Camp, Grille, GrilleArr),
+  campAdverse(AutreCamp, Camp),
+%	joueLeCoup(Premier, Camp, Grille, GrilleArr),
+  minmax(AutreCamp, 1, min, GrilleArr, Grille, _),
+  nl, afficheGrille(GrilleArr), nl,
   jeu:toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
-	campAdverse(AutreCamp, Camp),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
 
 % cas ou c est l utilisateur qui joue
@@ -206,6 +237,7 @@ moteur(Grille, ListeCoups, Camp) :-
 test(Col, Lig, Grille, Camp, CPU, ListeCoups) :-
   jeu:leCoupEstValide(Col, Lig, Grille),
   joueLeCoup([Col,Lig], Camp, Grille, GrilleArr),
+  nl, afficheGrille(GrilleArr), nl,
   jeu:toutesLesCasesValides(GrilleArr, ListeCoups, [Col, Lig], ListeCoupsNew),
   moteur(GrilleArr, ListeCoupsNew, CPU).
 

@@ -28,6 +28,9 @@ combine2([], _, []).
 combine2([L|LS], V, [[L,V]|R]) :- combine2(LS, V, R).
 
 
+associe([], [], []).
+associe([L1|R1], [L2|R2], [[L1,L2]|R]) :- associe(R1, R2, R).
+
 %% combine(+Liste1:list, +Liste2:list, ?ListeRetour:list)
 %
 %  Ce prédicat est satisfait si la liste de retour est le produit cartésien de la liste 1 et 2.
