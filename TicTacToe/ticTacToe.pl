@@ -142,9 +142,11 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
 	outils:replicate(-, SC, L), outils:replicate(L, SL, G).
 
 
-terminal(a).
+terminal(G) :- toutesLesCasesValides(G, _, _, LC), length(LC, L), L == 0.
 
-eval(G, J, 1000) :- partieGagnee(J, G).
+%eval(G, J, _) :- moteur:afficheGrille(G), nl, write(J), nl, fail.
+eval(G, J, 1000) :- partieGagnee(J, G), !.
+eval(G, J, -1000) :- moteur:campAdverse(J, J1), partieGagnee(J1, G), !.
 
 eval([[_,_,_],[_,Joueur,_],[_,_,_]], Joueur, 9) :- !.
 eval(_,_,5) :- !.

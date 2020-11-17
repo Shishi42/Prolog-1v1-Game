@@ -142,13 +142,13 @@ coupJoueDansGrille(NCol, NLig, Val, [X|Reste1], [X|Reste2]):- succNum(I, NLig),
 minmax(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
 minmax(Joueur, _, _, _, Grille, E) :- jeu:terminal(Grille), jeu:eval(Grille, Joueur, E), !.
 
-minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
+minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
   jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
-  campAdverse(Joueur, Adv),
-  maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
+%  campAdverse(Joueur, Adv),
+  maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
-  maplist(minmax(Adv, P1, max), _, GrilleArr, Es),
+  maplist(minmax(Joueur, P1, min), _, GrilleArr, Es),
   max_list(Es, E),
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),
@@ -157,13 +157,13 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 
 
 
-minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
+minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 
   jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
   campAdverse(Joueur, Adv),
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
-  maplist(minmax(Adv, P1, min), _, GrilleArr, Es),
+  maplist(minmax(Joueur, P1, max), _, GrilleArr, Es),
   min_list(Es, E),
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),
@@ -220,7 +220,7 @@ moteur(Grille, [Premier|ListeCoups], Camp) :-
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
 %	joueLeCoup(Premier, Camp, Grille, GrilleArr),
-  minmax(AutreCamp, 1, min, GrilleArr, Grille, _),
+  minmax(Camp, 4, max, GrilleArr, Grille, _),
   nl, afficheGrille(GrilleArr), nl,
   jeu:toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
