@@ -185,6 +185,22 @@ joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 	jeu:leCoupEstValide(Col, Lig, GrilleDep),
 	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr).
 
+
+
+
+ecrireFichMinMax(L,P) :- !,
+              number_string(P, Ps),
+              string_concat("Prof", Ps, F),
+              string_concat(F, ".txt", F1),
+              open(F1, append, X),
+              atomics_to_string(L, ',', L1),
+              write(X,L1),
+              write(X,"\n"),
+              write(X,"\n"),
+              close(X).
+
+
+
 %saisieUnCoupValide(Col,Lig,Grille):-
 %	saisieUnCoup(Col,Lig),
 %	leCoupEstValide(Col,Lig,Grille),
@@ -220,8 +236,9 @@ moteur(Grille, [Premier|ListeCoups], Camp) :-
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
 %	joueLeCoup(Premier, Camp, Grille, GrilleArr),
-  minmax(Camp, 4, max, GrilleArr, Grille, _),
+  minmax(Camp, 6, max, GrilleArr, Grille, E),
   nl, afficheGrille(GrilleArr), nl,
+  write(E), nl,
   jeu:toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
 

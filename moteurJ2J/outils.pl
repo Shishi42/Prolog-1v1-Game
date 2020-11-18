@@ -10,8 +10,50 @@
                     combine/3,
                     transpose/2,
                     coordonneesOuListe/3,
-                    duneListeALautre/3
+                    duneListeALautre/3,
+                    ligneDeN/3,
+                    lignesDeN/3
                   ]).
+
+
+
+
+%% ligneDeN(+Val:any, Liste:list, +NbRepetition:int)
+%
+% Ce prédicat est satisfait si les nbRepetition premier elements de la liste sont Val
+%
+% @param Val La valeur a vérifier
+% @param Liste La liste qui contient les elements
+% @param NbRepetition Le nombre de premier elements qui doivent être Val
+ligneDeN(Val, [Val|_], 1) :- !.
+ligneDeN(Val, [Val|R], N) :- N1 is N - 1, ligneDeN(Val, R, N1).
+
+
+
+
+
+%% lignesDeN(+Val:any, Grille:Grille, +NbRepetition:int)
+%
+% Ce prédicat est satisfait si la grille contient une ligne dont les nbRepetition premier elements sont Val
+%
+% @param Val La valeur a vérifier
+% @param Liste La liste qui contient les elements
+% @param NbRepetition Le nombre de premier elements qui doivent être Val
+lignesDeN(_, [], _) :- fail.
+lignesDeN(Val, [L|_], N) :- ligneDeN(Val, L, N), !.
+lignesDeN(Val, [_|R], N) :- lignesDeN(Val, R, N).
+
+
+
+%TODO :: toutesLesLignesDeLongueurSupAN(G, N, L)
+%% toutesLesLignesDeLongueurSupAN(+Grille:grille, +Longueur:Int, ?Lignes:list)
+%
+% Ce prédicat est satisfait si la liste de ligne contient toutes les lignes de longueur supérieur ou égale à Longueur de la grille
+% Toutles lignes contient les lignes, les colonnes, les diagonales.
+%
+% @param Grille La grille dans laquelle chercher les lignes
+% @param Longueur La longuer minimale des lignes
+% @param Lignes Les lignes de la grille de longuer supérieur ou égale à Longueur
 
 
 %% replicate(+Val:any, +NbRep:int, ?Liste:list)

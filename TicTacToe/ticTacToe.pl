@@ -103,6 +103,16 @@ partieGagnee(Val, G) :- diagonaleGagnante(Val, G).
 
 
 
+
+grilleAvecLigneDeN(G, Val, N) :-                  diagonale(G, _, D), outils:ligneDeN(Val, D, N).
+grilleAvecLigneDeN(G, Val, N) :- reverse(G, G1), 	diagonale(G1, _, D), outils:ligneDeN(Val, D, N).
+
+grilleAvecLigneDeN(G, Val, N) :-                                            outils:lignesDeN(Val, G, N).
+grilleAvecLigneDeN(G, Val, N) :-                  outils:transpose(G, G1),  outils:lignesDeN(Val, G1, N).
+grilleAvecLigneDeN(G, Val, N) :- reverse(G, G1), 	                          outils:lignesDeN(Val, G1, N).
+grilleAvecLigneDeN(G, Val, N) :- reverse(G, G1), 	outils:transpose(G1, G2), outils:lignesDeN(Val, G2, N).
+
+
 %% toutesLesCasesDepart(?ListeCases:list)
 %
 % Cette méthode permet de récupérer toutes les cases de départ
@@ -143,12 +153,17 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
 
 
 terminal(G) :- toutesLesCasesValides(G, _, _, LC), length(LC, L), L == 0.
+terminal(G) :- partieGagnee(x, G).
+terminal(G) :- partieGagnee(o, G).
 
 %eval(G, J, _) :- moteur:afficheGrille(G), nl, write(J), nl, fail.
-eval(G, J, 1000) :- partieGagnee(J, G), !.
 eval(G, J, -1000) :- moteur:campAdverse(J, J1), partieGagnee(J1, G), !.
+eval(G, J, 1000) :- partieGagnee(J, G), !.
 
-eval([[_,_,_],[_,Joueur,_],[_,_,_]], Joueur, 9) :- !.
+eval(G, J, -100) :- moteur:campAdverse(J, J1), grilleAvecLigneDeN(G, J1, 2), grilleAvecLigneDeN(G, J, 2).
+eval(G, J, -200) :- moteur:campAdverse(J, J1), grilleAvecLigneDeN(G, J1, 2).
+eval(G, J, 200) :- grilleAvecLigneDeN(G, J, 2).
+
 eval(_,_,5) :- !.
 
 %% toutesLesCasesValides(+Grille:Grille, +ListeCoups:list, +Case:list, ?NouveauListeCoups:list)
