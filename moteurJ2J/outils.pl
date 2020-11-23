@@ -126,7 +126,7 @@ diagonale2([_|LS], N, R) :-  N1 is N + 1, diagonale2(LS, N1, R), !.
 % @param Grille La grille à vérifier
 % @param Liste La liste qui contient la liste des diagonales de la grille
 diagonalesHGBD([], []) :- !.
-diagonalesHGBD([G|RG], [D|R]) :- diagonalesHGBD(RG, R), diagonale([G|RG], 0, D), !.
+diagonalesHGBD([G|RG], [D|R]) :- diagonalesHGBD(RG, R), diagonale([G|RG], D), !.
 
 
 %% listeDiagonale(+Grille:Grille, ?Lignes:list)
@@ -232,7 +232,7 @@ associe([L1|R1], [L2|R2], [[L1,L2]|R]) :- associe(R1, R2, R).
 % @param Liste2 La deuxième liste
 % @param ListeRetour La liste qui contient le produit cartésien de la liste 1 et 2
 combineListe(_, [], []).
-combineListe(L1, [L2|L2S], [V|R]) :- combineElem(L1, L2, V), combineListe(L1, L2S, R).
+combineListe(L1, [L2|L2S], RS) :- combineElem(L1, L2, V), combineListe(L1, L2S, R), append(V, R, RS).
 
 
 %% combineElem(+Liste:list, Val:any, ListeRetour:list)
