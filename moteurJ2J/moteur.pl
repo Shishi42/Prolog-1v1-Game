@@ -33,22 +33,31 @@ lanceJeu(File) :-
   moteur(G,ListeCoups,Camp).
 
 
+
 %% afficheLigne(+List:list)
 %
 % Affiche les éléments de la liste
 %
 % @param list La liste à afficher
-afficheLigne([]).
-afficheLigne([A|AS]) :-
-  write(A), tab(3),
-  afficheLigne(AS).
+afficheLigne2([]).
+afficheLigne2([A|AS]) :-
+  write(A), tab(1), write("|"), tab(1),
+  afficheLigne2(AS).
 
+afficheLigne(L, N) :- write(N), tab(2), write("|"), tab(1), afficheLigne2(L).
 
+% TODO :: Afficher num lignes, nom colonnes
 % Predicat : afficheGrille/1
-afficheGrille([]).
-afficheGrille([A|AS]) :-
-  afficheLigne(A), nl,
-  afficheGrille(AS).
+afficheGrille2([], _).
+afficheGrille2([A|AS], N) :-
+  afficheLigne(A, N), nl,
+  N1 is N + 1,
+  afficheGrille2(AS, N1).
+
+afficheNomColonne([]) :- writeln("").
+afficheNomColonne([C|RNC]) :- write(C), tab(1), write("|"), tab(1), afficheNomColonne(RNC).
+
+afficheGrille(G) :- outils:listeNomColonne(LNC), tab(3), write("|"), tab(1), afficheNomColonne(LNC), afficheGrille2(G, 1).
 
 
 %%%%%%%%%%%%%%%%% Représentation %%%%%%%%%%%%%%%%%
@@ -144,7 +153,7 @@ minmax(Joueur, _, _, _, Grille, E) :- jeu:terminal(Grille), jeu:eval(Grille, Jou
 
 minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
-  jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
+  toutesLesCasesValides(Grille, ListeCoups),
 %  campAdverse(Joueur, Adv),
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
@@ -159,7 +168,7 @@ minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
 minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 
-  jeu:toutesLesCasesValides(Grille, _, _, ListeCoups),
+  toutesLesCasesValides(Grille, ListeCoups),
   campAdverse(Joueur, Adv),
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
@@ -183,7 +192,8 @@ joueLeCoup2(Valeur, GrilleDep, GrilleArr, Case) :- joueLeCoup(Case, Valeur, Gril
 joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 	outils:coordonneesOuListe(Col, Lig, Case),
 	jeu:leCoupEstValide(Col, Lig, GrilleDep),
-	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr).
+	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr2),
+  jeu:consequencesCoupDansGrille(Col, Lig, Valeur, GrilleArr2, GrilleArr).
 
 
 
@@ -201,12 +211,18 @@ ecrireFichMinMax(L,P) :- !,
 
 
 
-%saisieUnCoupValide(Col,Lig,Grille):-
-%	saisieUnCoup(Col,Lig),
-%	leCoupEstValide(Col,Lig,Grille),
-%	writef('attention, vous ne pouvez pas jouer dans cette case'), nl,
-%	writef('reessayer SVP dans une autre case'),nl,
-%	saisieUnCoupValide(Col,Lig,Grille).
+
+
+%% toutesLesCasesValides(+Grille:Grille, ?NouveauListeCoups:list)
+%
+% Cette méthode permet de récupérer touts les coups disponibles pour le prochain joueur
+%
+% @param Grille La grille dans laquelle on joue
+% @param NouveauListeCoups La nouvelle liste des coups
+toutesLesCasesValides(Grille, LC2) :-
+  outils:toutesLesCases(LC1),
+  include(jeu:leCoupEstValide(Grille), LC1, LC2).
+
 
 
 % Predicat : moteur/3
@@ -216,8 +232,7 @@ ecrireFichMinMax(L,P) :- !,
 
 
 % cas gagnant pour le joueur
-moteur(Grille,L,Camp):-
-  write(L), nl,
+moteur(Grille,_,Camp):-
 	jeu:partieGagnee(Camp, Grille), nl,
 	write('le camp '), write(Camp), write(' a gagne').
 
@@ -232,14 +247,14 @@ moteur(Grille,_,Camp):-
 moteur(_,[],_) :-nl, write('game over').
 
 % cas ou l ordinateur doit jouer
-moteur(Grille, [Premier|ListeCoups], Camp) :-
+moteur(Grille, _, Camp) :-
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
-%	joueLeCoup(Premier, Camp, Grille, GrilleArr),
-  minmax(Camp, 6, max, GrilleArr, Grille, E),
+  jeu:profondeurMinMax(ProfMinMax),
+  minmax(Camp, ProfMinMax, max, GrilleArr, Grille, E),
   nl, afficheGrille(GrilleArr), nl,
   write(E), nl,
-  jeu:toutesLesCasesValides(GrilleArr, ListeCoups, Premier, ListeCoupsNew),
+  toutesLesCasesValides(GrilleArr, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
 
 % cas ou c est l utilisateur qui joue
@@ -247,19 +262,19 @@ moteur(Grille, ListeCoups, Camp) :-
   campCPU(CPU),
   campAdverse(Camp, CPU),
   jeu:saisieUnCoup(Grille, Col,Lig),
-  test(Col, Lig, Grille, Camp, CPU, ListeCoups).
+  valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
 
 
-% TODO :: Donner un vrai nom au prédicat
-test(Col, Lig, Grille, Camp, CPU, ListeCoups) :-
+% Si le coup est valide on le joue
+valide(Col, Lig, Grille, Camp, CPU, _) :-
   jeu:leCoupEstValide(Col, Lig, Grille),
   joueLeCoup([Col,Lig], Camp, Grille, GrilleArr),
   nl, afficheGrille(GrilleArr), nl,
-  jeu:toutesLesCasesValides(GrilleArr, ListeCoups, [Col, Lig], ListeCoupsNew),
+  toutesLesCasesValides(GrilleArr, ListeCoupsNew),
   moteur(GrilleArr, ListeCoupsNew, CPU).
 
-
-test(Col, Lig, Grille, Camp, _, ListeCoups) :-
+% Si le coup n'est pas valide on prévient le joueur et il recommence
+valide(Col, Lig, Grille, Camp, _, ListeCoups) :-
   \+ jeu:leCoupEstValide(Col, Lig, Grille),
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
