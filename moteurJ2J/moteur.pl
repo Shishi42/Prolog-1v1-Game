@@ -16,6 +16,9 @@ loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
   retractall(lastFile(LastFile)), assert(lastFile(File)).
 
 
+ticTacToe :- lanceJeu('TicTacToe/ticTacToe.pl').
+puissance4 :- lanceJeu('Puissance4/puissance4.pl').
+othello :- lanceJeu('Othello/othello.pl').
 
 %% lanceJeu(+File:string)
 %
@@ -24,12 +27,12 @@ loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
 % @param File le fichier du jeu
 lanceJeu(File) :-
   loadJeu(File),
-  jeu:initJeu(),
+  jeu:initJeu,
   jeu:grilleDeDepart(G),
-  jeu:toutesLesCasesDepart(ListeCoups),
   afficheGrille(G),nl,
    writeln("L ordinateur est les x et vous etes les o."),
    writeln("Quel camp doit debuter la partie ? "),read(Camp),
+  jeu:toutesLesCasesDepart(Camp, ListeCoups),
   moteur(G,ListeCoups,Camp).
 
 
@@ -46,7 +49,6 @@ afficheLigne2([A|AS]) :-
 
 afficheLigne(L, N) :- write(N), tab(2), write("|"), tab(1), afficheLigne2(L).
 
-% TODO :: Afficher num lignes, nom colonnes
 % Predicat : afficheGrille/1
 afficheGrille2([], _).
 afficheGrille2([A|AS], N) :-
@@ -146,15 +148,33 @@ coupJoueDansGrille(NCol, NLig, Val, [X|Reste1], [X|Reste2]):- succNum(I, NLig),
 
 
 %%%%%%%%%%%%%%%%% Moteur et règles %%%%%%%%%%%%%%%%%
-
+minMaxOppose(min, max).
+minMaxOppose(max, min).
 
 minmax(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
-minmax(Joueur, _, _, _, Grille, E) :- jeu:terminal(Grille), jeu:eval(Grille, Joueur, E), !.
+
+minmax(Joueur, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
+                                      jeu:terminal(Joueur, Grille),
+                                      jeu:terminal(Adv, Grille), jeu:eval(Grille, Joueur, E), !.
+
+
+minmax(Joueur, P, MM, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
+                                        minMaxOppose(MM, MM2),
+                                        P1 is P - 1,
+                                        minmax(Joueur, P1, MM2, _, Grille, E), !.
+
+
+minmax(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
+                                       jeu:terminal(Adv, Grille),
+                                       minMaxOppose(MM, MM2),
+                                       P1 is P - 1,
+                                       minmax(Joueur, P1, MM2, _, Grille, E), !.
+
 
 minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
-  toutesLesCasesValides(Grille, ListeCoups),
 %  campAdverse(Joueur, Adv),
+  toutesLesCasesValides(Joueur, Grille, ListeCoups),
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
   maplist(minmax(Joueur, P1, min), _, GrilleArr, Es),
@@ -168,8 +188,8 @@ minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
 minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 
-  toutesLesCasesValides(Grille, ListeCoups),
   campAdverse(Joueur, Adv),
+  toutesLesCasesValides(Adv, Grille, ListeCoups),
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
   P1 is Profondeur - 1,
   maplist(minmax(Joueur, P1, max), _, GrilleArr, Es),
@@ -191,7 +211,7 @@ joueLeCoup2(Valeur, GrilleDep, GrilleArr, Case) :- joueLeCoup(Case, Valeur, Gril
 
 joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 	outils:coordonneesOuListe(Col, Lig, Case),
-	jeu:leCoupEstValide(Col, Lig, GrilleDep),
+	jeu:leCoupEstValide(Valeur, Col, Lig, GrilleDep),
 	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr2),
   jeu:consequencesCoupDansGrille(Col, Lig, Valeur, GrilleArr2, GrilleArr).
 
@@ -219,9 +239,9 @@ ecrireFichMinMax(L,P) :- !,
 %
 % @param Grille La grille dans laquelle on joue
 % @param NouveauListeCoups La nouvelle liste des coups
-toutesLesCasesValides(Grille, LC2) :-
+toutesLesCasesValides(Camp, Grille, LC2) :-
   outils:toutesLesCases(LC1),
-  include(jeu:leCoupEstValide(Grille), LC1, LC2).
+  include(jeu:leCoupEstValide(Camp, Grille), LC1, LC2).
 
 
 
@@ -229,7 +249,13 @@ toutesLesCasesValides(Grille, LC2) :-
 % Usage : moteur(Grille,ListeCoups,Camp) prend en parametre une grille dans
 % laquelle tous les coups sont jouables et pour laquelle
 % Camp doit jouer.
-
+/*
+moteur(Grille,_,Camp):-
+  writeln("La liste de coups"),
+  toutesLesCasesValides(Camp, Grille, ListeCoupsNew),
+  writeln(ListeCoupsNew),
+  fail.
+*/
 
 % cas gagnant pour le joueur
 moteur(Grille,_,Camp):-
@@ -243,18 +269,16 @@ moteur(Grille,_,Camp):-
 	write('le camp '), write(CampGagnant), write(' a gagne').
 
 % cas de match nul, plus de coups jouables possibles
-% TODO :: Système de point a regarder en fin de partie
-moteur(_,[],_) :-nl, write('game over').
+moteur(G,[],_) :- jeu:determineGagnant(G).
 
 % cas ou l ordinateur doit jouer
 moteur(Grille, _, Camp) :-
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
   jeu:profondeurMinMax(ProfMinMax),
-  minmax(Camp, ProfMinMax, max, GrilleArr, Grille, E),
+  minmax(Camp, ProfMinMax, max, GrilleArr, Grille, _),
   nl, afficheGrille(GrilleArr), nl,
-  write(E), nl,
-  toutesLesCasesValides(GrilleArr, ListeCoupsNew),
+  toutesLesCasesValides(AutreCamp, GrilleArr, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
 
 % cas ou c est l utilisateur qui joue
@@ -267,14 +291,14 @@ moteur(Grille, ListeCoups, Camp) :-
 
 % Si le coup est valide on le joue
 valide(Col, Lig, Grille, Camp, CPU, _) :-
-  jeu:leCoupEstValide(Col, Lig, Grille),
+  jeu:leCoupEstValide(Camp, Col, Lig, Grille),
   joueLeCoup([Col,Lig], Camp, Grille, GrilleArr),
   nl, afficheGrille(GrilleArr), nl,
-  toutesLesCasesValides(GrilleArr, ListeCoupsNew),
+  toutesLesCasesValides(CPU, GrilleArr, ListeCoupsNew),
   moteur(GrilleArr, ListeCoupsNew, CPU).
 
 % Si le coup n'est pas valide on prévient le joueur et il recommence
 valide(Col, Lig, Grille, Camp, _, ListeCoups) :-
-  \+ jeu:leCoupEstValide(Col, Lig, Grille),
+  \+ jeu:leCoupEstValide(Camp, Col, Lig, Grille),
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).

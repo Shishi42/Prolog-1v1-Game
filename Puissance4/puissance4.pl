@@ -11,13 +11,19 @@
 :- consult('../moteurJ2J/outils.pl').
 
 
-%% puissance4()
+%% initJeu
 %
-%  Cette méthode permet de lancer une partie de Puissance 4.
-initJeu():-
+%  Ce prédicat permet d'initialiser la taille de la grille.
+initJeu:-
 	moteur:init(6, g).
 
+
+%% profondeurMinMax(?Val:int)
+%
+% Ce predicat est satisfait quand la valeur Val correspond à la profondeur jusqu'à laquelle peut aller
+% un algorithme minmax pour ce jeu.
 profondeurMinMax(4).
+
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
 %
@@ -26,8 +32,8 @@ profondeurMinMax(4).
 % @param Colonne La colonne de la case à vérifier
 % @param Ligne La ligne de la case à vérifier
 % @param Grille La grille dans laquelle on vérifie la case
-leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), moteur:succNum(L, L2), moteur:caseDeGrille(C,L2,G,Cv2), \+ moteur:caseVide(Cv2).
-leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), \+ moteur:succNum(L, _).
+leCoupEstValide(_,C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), moteur:succNum(L, L2), moteur:caseDeGrille(C,L2,G,Cv2), \+ moteur:caseVide(Cv2).
+leCoupEstValide(_,C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), \+ moteur:succNum(L, _).
 
 
 %% leCoupEstValide(+Grille:Grille, +Case:Case)
@@ -36,8 +42,8 @@ leCoupEstValide(C,L,G) :- moteur:caseVide(Cv), moteur:caseDeGrille(C,L,G,Cv), \+
 %
 % @param Grille La grille dans laquelle on vérifié la case
 % @param Case La case à vérifier
-% @see [[leCoupEstValide/3]]
-leCoupEstValide(G, CL) :- outils:coordonneesOuListe(Col, Lig, CL), leCoupEstValide(Col, Lig, G).
+% @see [[leCoupEstValide/4]]
+leCoupEstValide(_, G, CL) :- outils:coordonneesOuListe(Col, Lig, CL), leCoupEstValide(_, Col, Lig, G).
 
 
 
@@ -56,7 +62,7 @@ partieGagnee(Val, G) :- outils:grilleAvecLigneDeN(G, Val, 4, 4).
 % Cette méthode permet de récupérer toutes les cases de départ
 %
 % @param ListeCases La liste des cases où l'on peut jouer
-toutesLesCasesDepart(N) :- outils:listeNomColonne(C), moteur:sizeLine(SL), outils:combineListe(C, [SL], N).
+toutesLesCasesDepart(_, N) :- outils:listeNomColonne(C), moteur:sizeLine(SL), outils:combineElem(C, SL, N).
 
 
 
@@ -65,14 +71,14 @@ toutesLesCasesDepart(N) :- outils:listeNomColonne(C), moteur:sizeLine(SL), outil
 % Cette méthode permet de récupérer la grille de départ du jeu
 %
 % @param Grille La grille de départ
-grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC),
-	outils:replicate(-, SC, L), outils:replicate(L, SL, G).
+grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC), moteur:caseVide(Cv),
+	outils:replicate(Cv, SC, L), outils:replicate(L, SL, G).
 
 
 
-terminal(G) :- moteur:toutesLesCasesValides(G, LC), length(LC, L), L == 0.
-terminal(G) :- partieGagnee(x, G).
-terminal(G) :- partieGagnee(o, G).
+terminal(J, G) :- moteur:toutesLesCasesValides(J, G, LC), length(LC, L), L == 0.
+terminal(_, G) :- partieGagnee(x, G).
+terminal(_, G) :- partieGagnee(o, G).
 
 
 %eval(G, J, _) :- moteur:afficheGrille(G), nl, write(J), nl, fail.
@@ -89,22 +95,9 @@ eval(_,_,5) :- !.
 consequencesCoupDansGrille(_, _, _, GrilleArr, GrilleArr).
 
 
-derniereLigne2([C|_], 0) :- \+ moteur:caseVide(C), !.
-derniereLigne2([], 0) :- !.
-derniereLigne2([_|R], NumLigne) :- derniereLigne2(R, N), NumLigne is N + 1.
-
-
-%% derniereLigne(+Grille:Grille, +NomColonne:char, ?NumLigne:int)
-%
-% Cette méthode permet récupérer le numéro de ligne de la dernière case vide d'une colonne
-%
-% @param Grille La grille où chercher
-% @param NomColonne Le nom de la colonne dans laquelle on cherche la dernière case vide
-% @param NumLigne Le numéro de la ligne où se trouve la dernière case vide
-derniereLigne(G, NomColonne, NumLigne) :-
-	moteur:equiv(NomColonne, NumColonne),
-	outils:transpose(G, G1), nth1(NumColonne, G1, L),
-	derniereLigne2(L, NumLigne).
+determineGagnant(G) :- partieGagnee(x, G), write('le camp '), write(x), write(' a gagne').
+determineGagnant(G) :- partieGagnee(o, G), write('le camp '), write(o), write(' a gagne').
+determineGagnant(_) :- nl, write('egalité').
 
 
 %% saisieUnCoup(+Grille:Grille, ?NomColonne:char, ?NumLigne:int)
@@ -122,6 +115,24 @@ saisieUnCoup(G, NomCol,NumLig) :-
 	derniereLigne(G, NomCol, NumLig).
 
 
+
+
+
+%% derniereLigne(+Grille:Grille, +NomColonne:char, ?NumLigne:int)
+%
+% Cette méthode permet récupérer le numéro de ligne de la dernière case vide d'une colonne
+%
+% @param Grille La grille où chercher
+% @param NomColonne Le nom de la colonne dans laquelle on cherche la dernière case vide
+% @param NumLigne Le numéro de la ligne où se trouve la dernière case vide
+derniereLigne(G, NomColonne, NumLigne) :-
+	moteur:equiv(NomColonne, NumColonne),
+	outils:transpose(G, G1), nth1(NumColonne, G1, L),
+	derniereLigne2(L, NumLigne).
+
+derniereLigne2([C|_], 0) :- \+ moteur:caseVide(C), !.
+derniereLigne2([], 0) :- !.
+derniereLigne2([_|R], NumLigne) :- derniereLigne2(R, N), NumLigne is N + 1.
 
 
 

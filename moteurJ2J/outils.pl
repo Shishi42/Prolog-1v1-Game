@@ -16,6 +16,10 @@
                   ]).
 
 
+modifieGrille(Grille, _, [], Grille) :- !.
+modifieGrille(GrilleDep, Val, [Case|ListeCoups], GrilleArr) :-  outils:coordonneesOuListe(Col, Lig, Case),
+                                                                moteur:coupJoueDansGrille(Col, Lig, Val, GrilleDep, GrilleArr2),
+                                                                modifieGrille(GrilleArr2, Val, ListeCoups, GrilleArr).
 
 
 
