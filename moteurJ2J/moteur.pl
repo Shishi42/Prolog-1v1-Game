@@ -268,30 +268,30 @@ minmax(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
 minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
 
 %  campAdverse(Joueur, Adv),
-  toutesLesCasesValides(Joueur, Grille, ListeCoups),
-  maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),
+  toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
+  maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
   P1 is Profondeur - 1,
-  maplist(minmax(Joueur, P1, min), _, GrilleArr, Es),
-  max_list(Es, E),
+  maplist(minmax(Joueur, P1, min), _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
+  max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
-  include(=([_, E]), GrilleEval, GrilleA),
-  nth1(1, GrilleA, GrilleF),
-  nth1(1, GrilleF, GrilleFin).
+  include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
+  nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus fort (on pourrait l'améliorer avec
+  nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
 
 minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 
   campAdverse(Joueur, Adv),
-  toutesLesCasesValides(Adv, Grille, ListeCoups),
-  maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),
+  toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
+  maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
   P1 is Profondeur - 1,
-  maplist(minmax(Joueur, P1, max), _, GrilleArr, Es),
-  min_list(Es, E),
+  maplist(minmax(Joueur, P1, max), _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
+  min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
-  include(=([_, E]), GrilleEval, GrilleA),
-  nth1(1, GrilleA, GrilleF),
-  nth1(1, GrilleF, GrilleFin).
+  include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
+  nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus faible (on pourrait l'améliorer avec
+  nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
 
