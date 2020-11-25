@@ -247,6 +247,19 @@ minMaxOppose(min, max).
 minMaxOppose(max, min).
 
 
+
+minmaxList(_, _, max, _, [], []) :- !.
+minmaxList(Joueur, Profondeur, max, GrilleFin, [Grille|Grilles], [E|Es]) :-
+  minmax(Joueur, Profondeur, max, GrilleFin, Grille, E),
+  minmaxList(Joueur, Profondeur, max, _, Grilles, Es).
+
+
+minmaxList(_, _, min, _, [], []) :- !.
+minmaxList(Joueur, Profondeur, min, GrilleFin, [Grille|Grilles], [E|Es]) :-
+  minmax(Joueur, Profondeur, min, GrilleFin, Grille, E),
+  minmaxList(Joueur, Profondeur, min, _, Grilles, Es).
+
+
 %% minmax(+Joueur:any, +Profondeur:int, +MinMax:enum(min, max), ?GrilleArrive:grille, +Grille:grille, ?Eval:int)
 %
 % Ce predicat permet d'effectuer une recher minmax du meilleur(max)/pire(min) coup possible
@@ -283,7 +296,7 @@ minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
   toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
   P1 is Profondeur - 1,
-  maplist(minmax(Joueur, P1, min), _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
+  minmaxList(Joueur, P1, min, _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
   max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
@@ -298,7 +311,7 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
   toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
   P1 is Profondeur - 1,
-  maplist(minmax(Joueur, P1, max), _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
+  minmaxList(Joueur, P1, max, _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
   min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
