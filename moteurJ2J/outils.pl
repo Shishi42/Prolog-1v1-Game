@@ -22,6 +22,19 @@ modifieGrille(GrilleDep, Val, [Case|ListeCoups], GrilleArr) :-  outils:coordonne
                                                                 modifieGrille(GrilleArr2, Val, ListeCoups, GrilleArr).
 
 
+remplie2(Es, _, L, Es) :- L =< 0, !.
+remplie2(Es, Val, LG, [Val|Ret]) :-
+  LG1 is LG - 1,
+  remplie2(Es, Val, LG1, Ret).
+
+remplie(Es, Val, LG, Ret) :-
+  reverse(Es, Es2),
+  length(Es2, L2),
+  LT is LG - L2,
+  remplie2(Es2, Val, LT, Ret2),
+  reverse(Ret2, Ret).
+
+
 
 %% ligneDeN(+Val:any, Liste:list, +NbRepetition:int)
 %
