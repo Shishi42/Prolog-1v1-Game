@@ -24,6 +24,7 @@ othello :- lanceJeu('Othello/othello.pl').
 lastFile('').
 
 :- dynamic(lastFile/1).
+:- dynamic(campCPU/1).
 
 %% loadFile(+File:string)
 %
@@ -33,6 +34,14 @@ lastFile('').
 loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
   retractall(lastFile(LastFile)), assert(lastFile(File)).
 
+
+choixCamp :-
+  writeln("Qui voulez vous jouer ?"),
+  writeln("Les x ou les o ?"),
+  read(Camp),
+  campAdverse(Camp, CPU),
+  retractall(campCPU(_)),
+  assert(campCPU(CPU)).
 
 %% lanceJeu(+File:string)
 %
@@ -44,7 +53,10 @@ lanceJeu(File) :-
   jeu:initJeu,
   jeu:grilleDeDepart(G),
   afficheGrille(G),nl,
-   writeln("L ordinateur est les x et vous etes les o."),
+  choixCamp,
+  campCPU(Adv),
+  campAdverse(Adv, Joueur),
+   write("L'ordinateur est les "), write(Adv), write(" et vous etes les "), writeln(Joueur),
    writeln("Quel camp doit debuter la partie ? "),read(Camp),
   jeu:toutesLesCasesDepart(Camp, ListeCoups),
   moteur(G,ListeCoups,Camp).
@@ -298,7 +310,7 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 %% campCPU(?Val:any)
 %
 % Ce prédicat determine la valeur du joueur ordinateur (la façon dont est représenté ses pions sur la grille)
-campCPU(x).
+campCPU(o).
 
 
 %% campAdverse(?Val1:any, ?Val2:any)

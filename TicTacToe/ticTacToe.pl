@@ -22,7 +22,7 @@ initJeu :-
 %
 % Ce predicat est satisfait quand la valeur Val correspond à la profondeur jusqu'à laquelle peut aller
 % un algorithme minmax pour ce jeu.
-profondeurMinMax(5).
+profondeurMinMax(6).
 
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
