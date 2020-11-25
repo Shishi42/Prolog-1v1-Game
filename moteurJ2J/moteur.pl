@@ -354,7 +354,7 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
     toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
     maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
     P1 is Profondeur - 1,
-    maplist(alphabeta(Joueur, P1, min), _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
+    minmaxList(Joueur, P1, min, _, GrilleArr, Es),                %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
     max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
     outils:associe(GrilleArr, Es, GrilleEval),
     include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
@@ -367,12 +367,12 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
     toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
     maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
     P1 is Profondeur - 1,
-    maplist(alphabeta(Joueur, P1, max), _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
+    minmaxList(Joueur, P1, max, _, GrilleArr, Es),                %On voit ce que peut repondre le joueur pour chacun d'entre eux
     min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
     outils:associe(GrilleArr, Es, GrilleEval),
     include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
     nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus faible (on pourrait l'améliorer avec
-    nth1(1, GrilleF, GrilleFin).
+    nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
 
