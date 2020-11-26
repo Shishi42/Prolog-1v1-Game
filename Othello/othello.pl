@@ -26,7 +26,7 @@ profondeurMinMax(4).
 
 
 %% leCoupEstValide(+Colonne:char, +Ligne:int, +Grille:Grille)
-%
+% @see [[leCoupEstValide/3]]
 % Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
 %
 % @param Colonne La colonne de la case à vérifier
@@ -35,21 +35,10 @@ profondeurMinMax(4).
 leCoupEstValide(J,C,L,G) :- outils:coordonneesOuListe(C, L, CL), leCoupEstValide(J, G, CL).
 
 
-
-%% leCoupEstValide(+Grille:Grille, +Case:Case)
-%
-% Cette méthode permet de savoir si on peut jouer dans une case dans une grille donnée
-%
-% @param Grille La grille dans laquelle on vérifié la case
-% @param Case La case à vérifier
-% @see [[leCoupEstValide/4]]
-%leCoupEstValide(_, G, CL) :- outils:coordonneesOuListe(Col, Lig, CL), leCoupEstValide(_, Col, Lig, G).
-
-
-
 %% partieGagnee(+Val:char, +Grille:Grille)
 %
 % Cette méthode permet de savoir si une grille est gagnante pour un joueur
+% Il n'y a pas de situation gagnante à l'othello, on dertermine le gagant avec un score en fin de partie
 %
 % @param Val La valeur à vérifier
 % @param Grille La grille à vérifier
@@ -57,10 +46,11 @@ partieGagnee(_, _) :- fail.
 
 
 
-%% toutesLesCasesDepart(?ListeCases:list)
+%% toutesLesCasesDepart(+Camp:any, ?ListeCases:list)
 %
-% Cette méthode permet de récupérer toutes les cases de départ
+% Cette méthode permet de récupérer toutes les cases de départ pour un joueur
 %
+% @param Camp Le joueur pour lequelle on cherche les cases de départ
 % @param ListeCases La liste des cases où l'on peut jouer
 toutesLesCasesDepart(C, N) :- grilleDeDepart(G), moteur:toutesLesCasesValides(C, G, N).
 
@@ -78,16 +68,48 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC), moteur:caseVid
 
 
 
+%% terminal(+Joueur:any, +Grille:grille)
+%
+% Ce prédicat est satisfait si la Grille est une grille "terminale" pour le Joueur
+%
+% Un grille terminale est une grille dans laquelle un joueur spécifique ne peut pas jouer
+%
+% @param Joueur Le joueur que l'on vérifie pour la Grille
+% @param Grille la grille que l'on vérifie pour le Joueur 
 terminal(J, G) :- moteur:toutesLesCasesValides(J, G, LC), length(LC, L), L == 0.
 
 
+
+
+%% eval(+Grille:grille, +Joueur:any, ?Eval:int)
+%
+% Ce prédicat permet d'évaluer une grille pour un joueur
+%
+% L'évaluation représente si le Joueur donnée à l'avantage ou non dans la Grille
+%
+% Plus la valeur Eval est grande plus la Grille est intéréssante pour le Joueur
+%
+% On utilise ce prédicat pour la fonction minmax
+%
+% @param Grille La grille à évaluer
+% @param Joueur Le joueur pour lequelle on va évaluer la grille
+% @param Eval Une valeur représentative de l'avantage du Joueur dans la Grille
 %eval(G, J, _) :- moteur:afficheGrille(G), nl, write(J), nl, fail.
 
 eval(G, J, N) :- score(G, J, NJ), moteur:campAdverse(J, A), score(G, A, NA), N is NJ - NA.
 
 eval(_,_,5) :- !.
 
-
+%% consequencesCoupDansGrille(+Colonne:char, +Ligne:int, +Camp:any, +GrilleDep:grille, ?GrilleArr:grille)
+%
+% Ce prédicat est satisfait quand la GrilleArr est égale à la GrilleDep avec
+% les conséquences d'avoir joué dans la case [Colonne, Ligne]
+%
+% @param Colonne Le nom de la colonne dans laquelle on a joué
+% @param Ligne Le numéro de la ligne dans laquelle on a joué
+% @param Camp Le joueur qui a joué dans la grille
+% @param GrilleDep La grille de jeu sans les conséquences du coup dans la case [Colonne, Ligne]
+% @param GrilleArr La grille de jeu avec les conséquences du coup dans la case [Colonne, Ligne]
 consequencesCoupDansGrille(Colonne, Ligne, Camp, Grille0, GrilleArr) :-
   mangePion(1,Camp,Grille0,Grille1,[Colonne,Ligne]),
   mangePion(2,Camp,Grille1,Grille2,[Colonne,Ligne]),
@@ -99,6 +121,11 @@ consequencesCoupDansGrille(Colonne, Ligne, Camp, Grille0, GrilleArr) :-
   mangePion(8,Camp,Grille7,GrilleArr,[Colonne,Ligne]),!.
 
 
+%% determineGagnant(+Grille:grille)
+%
+% Ce prédicat permet d'afficher qui à gagné dans une grille donnée
+%
+% @param Grille La grille que l'on vérifie
 determineGagnant(G) :- score(G, x, ScoreX), score(G, o, ScoreO), ScoreX > ScoreO, write('le camp '), write(x), write(' a gagne').
 determineGagnant(G) :- score(G, x, ScoreX), score(G, o, ScoreO), ScoreX < ScoreO, write('le camp '), write(o), write(' a gagne').
 determineGagnant(_) :- nl, write('egalité').

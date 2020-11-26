@@ -76,11 +76,34 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC), moteur:caseVid
 
 
 
+
+
+%% terminal(+Joueur:any, +Grille:grille)
+%
+% Ce prédicat est satisfait si la Grille est une grille "terminale" pour le Joueur
+%
+% Un grille terminale est une grille dans laquelle un joueur spécifique ne peut pas jouer
+%
+% @param Joueur Le joueur que l'on vérifie pour la Grille
+% @param Grille la grille que l'on vérifie pour le Joueur 
 terminal(J, G) :- moteur:toutesLesCasesValides(J, G, LC), length(LC, L), L == 0.
 terminal(_, G) :- partieGagnee(x, G).
 terminal(_, G) :- partieGagnee(o, G).
 
 
+%% eval(+Grille:grille, +Joueur:any, ?Eval:int)
+%
+% Ce prédicat permet d'évaluer une grille pour un joueur
+%
+% L'évaluation représente si le Joueur donnée à l'avantage ou non dans la Grille
+%
+% Plus la valeur Eval est grande plus la Grille est intéréssante pour le Joueur
+%
+% On utilise ce prédicat pour la fonction minmax
+%
+% @param Grille La grille à évaluer
+% @param Joueur Le joueur pour lequelle on va évaluer la grille
+% @param Eval Une valeur représentative de l'avantage du Joueur dans la Grille
 %eval(G, J, _) :- moteur:afficheGrille(G), nl, write(J), nl, fail.
 eval(G, J, -1000) :- moteur:campAdverse(J, J1), partieGagnee(J1, G), !.
 eval(G, J, 1000) :- partieGagnee(J, G), !.
@@ -92,9 +115,28 @@ eval(G, J, 200) :- outils:grilleAvecLigneDeN(G, J, 3, 2).
 eval(_,_,5) :- !.
 
 
+
+
+%% consequencesCoupDansGrille(+Colonne:char, +Ligne:int, +Camp:any, +GrilleDep:grille, ?GrilleArr:grille)
+%
+% Ce prédicat est satisfait quand la GrilleArr est égale à la GrilleDep avec
+% les conséquences d'avoir joué dans la case [Colonne, Ligne]
+%
+% Il n'y a pas de conséquences quand on joue un coup au Tic-Tac-Toe
+%
+% @param Colonne Le nom de la colonne dans laquelle on a joué
+% @param Ligne Le numéro de la ligne dans laquelle on a joué
+% @param Camp Le joueur qui a joué dans la grille
+% @param GrilleDep La grille de jeu sans les conséquences du coup dans la case [Colonne, Ligne]
+% @param GrilleArr La grille de jeu avec les conséquences du coup dans la case [Colonne, Ligne]
 consequencesCoupDansGrille(_, _, _, GrilleArr, GrilleArr).
 
 
+%% determineGagnant(+Grille:grille)
+%
+% Ce prédicat permet d'afficher qui à gagné dans une grille donnée
+%
+% @param Grille La grille que l'on vérifie
 determineGagnant(G) :- partieGagnee(x, G), write('le camp '), write(x), write(' a gagne').
 determineGagnant(G) :- partieGagnee(o, G), write('le camp '), write(o), write(' a gagne').
 determineGagnant(_) :- nl, write('egalité').
