@@ -122,7 +122,6 @@ init(SL, SC) :-
   assert(size(SL, SC)),
   sizeLine(SL), sizeColumn(SC),
   retractall(succNum(_, _)),
-  retractall(succAlpha(_, _)),
   retractall(equiv(_, _)),
   initSuccNum(1, SL),
   initSuccAlpha(a, SC),
@@ -321,78 +320,7 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
   nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
-
-
-
-
-
-
-
-
-
-
-
-  alphabeta(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
-
-  alphabeta(Joueur, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
-                                           jeu:terminal(Joueur, Grille),
-                                           jeu:terminal(Adv, Grille), jeu:eval(Grille, Joueur, E), !.
-
-
-  alphabeta(Joueur, P, MM, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
-                                             minMaxOppose(MM, MM2),
-                                             P1 is P - 1,
-                                             alphabeta(Joueur, P1, MM2, _, Grille, E), !.
-
-
-  alphabeta(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
-                                            jeu:terminal(Adv, Grille),
-                                            minMaxOppose(MM, MM2),
-                                            P1 is P - 1,
-                                            alphabeta(Joueur, P1, MM2, _, Grille, E), !.
-
-  alphabeta(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
-    %  campAdverse(Joueur, Adv),
-    toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
-    maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
-    P1 is Profondeur - 1,
-    minmaxList(Joueur, P1, min, _, GrilleArr, Es),                %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
-    max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
-    outils:associe(GrilleArr, Es, GrilleEval),
-    include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
-    nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus fort (on pourrait l'améliorer avec
-    nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
-
-
-  alphabeta(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
-    campAdverse(Joueur, Adv),
-    toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
-    maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
-    P1 is Profondeur - 1,
-    minmaxList(Joueur, P1, max, _, GrilleArr, Es),                %On voit ce que peut repondre le joueur pour chacun d'entre eux
-    min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
-    outils:associe(GrilleArr, Es, GrilleEval),
-    include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
-    nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus faible (on pourrait l'améliorer avec
-    nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
-
-
-
-
-
-
-
-
-
-
-
 %% campCPU(?Val:any)
-%
-% Ce prédicat determine la valeur du joueur ordinateur (la façon dont est représenté ses pions sur la grille)
-
-% TO DO %
-%campCPU(o).
-
 
 %% campAdverse(?Val1:any, ?Val2:any)
 %
@@ -489,7 +417,6 @@ moteur(Grille, _, Camp) :-
   campAdverse(AutreCamp, Camp),
   jeu:profondeurMinMax(ProfMinMax),
   minmax(Camp, ProfMinMax, max, GrilleArr, Grille, _),
-  %alphabeta(Camp, ProfMinMax, max, GrilleArr, Grille, _),
   nl, afficheGrille(GrilleArr), nl,
   toutesLesCasesValides(AutreCamp, GrilleArr, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
@@ -524,7 +451,9 @@ valide(Col, Lig, Grille, Camp, _, ListeCoups) :-
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
 
-% TO DO %
+%% menuPrincipal
+%
+% Ce prédicat affiche le menu avec les différents choix
 menuPrincipal :-
 	tab(8),writeln('Menu Principal'),
 	tab(8),writeln('--------------'),
@@ -533,23 +462,26 @@ menuPrincipal :-
 	tab(6),writeln('0 - Quitter'),
 	saisieChoix,!.
 
-% TO DO %
+%% saisieChoix
+%
+% Ce prédicat permet la saisie du choix de l'utilisateur
 saisieChoix :-
 	writeln('Choisissez une option (sans oublier le point) : '),
+  retractall(modeJeu(_)),
 	read(Choix),
   lanceChoix(Choix).
 
-% TO DO %
+%% lanceChoix(?Choix:int)
+%
+% Ce prédicat applique le choix de l'utilisateur
 lanceChoix(0):-
   tab(10),writeln('A tres bientot...'),
   abort.
 
-% TO DO %
 lanceChoix(1):-
   assert(modeJeu(jcj)),
   writeln('Lancement d une partie Joueur contre Joueur').
 
-% TO DO %
 lanceChoix(2):-
   assert(modeJeu(jco)),
   writeln('Lancement d une partie Joueur contre ordinateur').
