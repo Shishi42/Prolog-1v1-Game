@@ -84,7 +84,6 @@ afficheNomColonne([]) :- writeln("").
 afficheNomColonne([C|RNC]) :- write(C), tab(1), write("|"), tab(1), afficheNomColonne(RNC).
 
 
-%%%%%%%%%%%%%%%%% Représentation %%%%%%%%%%%%%%%%%
 
 %% caseVide(?Val:any)
 %

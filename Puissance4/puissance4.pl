@@ -85,7 +85,8 @@ grilleDeDepart(G) :- moteur:size(SL, SCA), moteur:equiv(SCA, SC), moteur:caseVid
 % Un grille terminale est une grille dans laquelle un joueur spécifique ne peut pas jouer
 %
 % @param Joueur Le joueur que l'on vérifie pour la Grille
-% @param Grille la grille que l'on vérifie pour le Joueur terminal(J, G) :- moteur:toutesLesCasesValides(J, G, LC), length(LC, L), L == 0.
+% @param Grille la grille que l'on vérifie pour le Joueur
+terminal(J, G) :- moteur:toutesLesCasesValides(J, G, LC), length(LC, L), L == 0.
 terminal(_, G) :- partieGagnee(x, G).
 terminal(_, G) :- partieGagnee(o, G).
 
