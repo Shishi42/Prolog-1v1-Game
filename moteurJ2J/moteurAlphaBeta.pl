@@ -25,7 +25,6 @@ lastFile('').
 
 :- dynamic(lastFile/1).
 :- dynamic(campCPU/1).
-:- dynamic(modeJeu/1).
 
 %% loadFile(+File:string)
 %
@@ -42,11 +41,7 @@ choixCamp :-
   read(Camp),
   campAdverse(Camp, CPU),
   retractall(campCPU(_)),
-  assert(campCPU(CPU)),
-  retractall(modeJeu(_)),
-  writeln("jcj (Joueur contre Joueur) ou jco (Joueur contre Ordinateur) ?"),
-  read(Mode),
-  assert(modeJeu(Mode)).
+  assert(campCPU(CPU)).
 
 %% lanceJeu(+File:string)
 %
@@ -253,17 +248,32 @@ minMaxOppose(max, min).
 
 
 
-minmaxList(_, _, max, _, [], []) :- !.
-minmaxList(Joueur, Profondeur, max, GrilleFin, [Grille|Grilles], [E|Es]) :-
-  minmax(Joueur, Profondeur, max, GrilleFin, Grille, E),
-  minmaxList(Joueur, Profondeur, max, _, Grilles, Es).
+%testMax(V, A, B, _, _, _, _, _, _, _, _, _) :- write(V), tab(2), write(A), tab(2), writeln(B), fail.
+testMax(V, _, B, _, _, _, _, _, _, _, [], []) :- V >= B.
+testMax(V, A, _, Joueur, Profondeur, max, _, B2, _, _, Grilles, Es) :-
+  A2 is max(A, V),
+  minmaxList(Joueur, Profondeur, max, A2, B2, V, _, Grilles, Es, A2, B2).
+
+%testMin(V, A, B, _, _, _, _, _, _, _, _, _) :- write(V), tab(2), write(A), tab(2), writeln(B), fail.
+testMin(V, A, _, _, _, _, _, _, _, _, [], []) :- V =< A.
+testMin(V, _, B, Joueur, Profondeur, min, A2, _, _, _, Grilles, Es) :-
+  B2 is min(B, V),
+  minmaxList(Joueur, Profondeur, min, A2, B2, V, _, Grilles, Es, A2, B2).
 
 
-minmaxList(_, _, min, _, [], []) :- !.
-minmaxList(Joueur, Profondeur, min, GrilleFin, [Grille|Grilles], [E|Es]) :-
-  minmax(Joueur, Profondeur, min, GrilleFin, Grille, E),
-  minmaxList(Joueur, Profondeur, min, _, Grilles, Es).
 
+minmaxList(_, _, max, _, _, _, _, [], []) :- !.
+minmaxList(Joueur, Profondeur, max, A, B, V, _, [Grille|Grilles], [E|Es], A2, B2) :-
+  minmax(Joueur, Profondeur, max, A, B, _, Grille, E),
+  V2 is max(V, E),
+  testMax(V2, A, B, Joueur, Profondeur, max, A, B, V, _, Grilles, Es).
+
+
+minmaxList(_, _, min, _, _, _, _, [], [], _, _) :- !.
+minmaxList(Joueur, Profondeur, min, A, B, V, _, [Grille|Grilles], [E|Es], A2, B2) :-
+  minmax(Joueur, Profondeur, min, A, B, _, Grille, E),
+  V2 is min(V, E),
+  testMin(V2, A, B, Joueur, Profondeur, min, A, B, V, _, Grilles, Es).
 
 %% minmax(+Joueur:any, +Profondeur:int, +MinMax:enum(min, max), ?GrilleArrive:grille, +Grille:grille, ?Eval:int)
 %
@@ -275,117 +285,63 @@ minmaxList(Joueur, Profondeur, min, GrilleFin, [Grille|Grilles], [E|Es]) :-
 % @param GrilleArrive La grille dans laquelle on a joué le coup
 % @param Grille La grille dans laquelle on cherche le meilleur coup
 % @param Eval La valeur du meilleur coup trouvé
-minmax(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
+minmax(Joueur, 0, _, _, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
 
-minmax(Joueur, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
+minmax(Joueur, _, _, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
                                       jeu:terminal(Joueur, Grille),
                                       jeu:terminal(Adv, Grille), jeu:eval(Grille, Joueur, E), !.
 
 
-minmax(Joueur, P, MM, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
+minmax(Joueur, P, MM, _, _, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
                                         minMaxOppose(MM, MM2),
                                         P1 is P - 1,
                                         minmax(Joueur, P1, MM2, _, Grille, E), !.
 
 
-minmax(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
+minmax(Joueur, P, MM, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
                                        jeu:terminal(Adv, Grille),
                                        minMaxOppose(MM, MM2),
                                        P1 is P - 1,
                                        minmax(Joueur, P1, MM2, _, Grille, E), !.
 
 
-minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
+minmax(Joueur, Profondeur, max, A, B, GrilleFin, Grille, E) :-
 
 %  campAdverse(Joueur, Adv),
   toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
   P1 is Profondeur - 1,
-  minmaxList(Joueur, P1, min, _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
+  minmaxList(Joueur, P1, min, A, B, 10000, _, GrilleArr, Es, A2, B2), %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
   max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
-  outils:associe(GrilleArr, Es, GrilleEval),
+  length(GrilleArr, LG),
+  length(Es, LE),
+  write(LG),
+  writeln(LE),
+  outils:remplie(Es, -10000, LG, Es2),
+  outils:associe(GrilleArr, Es2, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
   nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus fort (on pourrait l'améliorer avec
   nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
 
-minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
+minmax(Joueur, Profondeur, min, A, B,  GrilleFin, Grille, E) :-
 
   campAdverse(Joueur, Adv),
   toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
   P1 is Profondeur - 1,
-  minmaxList(Joueur, P1, max, _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
+  minmaxList(Joueur, P1, max, A, B, -10000, _, GrilleArr, Es, A2, B2), %On voit ce que peut repondre le joueur pour chacun d'entre eux
   min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
-  outils:associe(GrilleArr, Es, GrilleEval),
+  length(GrilleArr, LG),
+  length(Es, LE),
+  write(LG),
+  writeln(LE),
+  outils:remplie(Es, 10000, LG, Es2),
+  outils:associe(GrilleArr, Es2, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
   nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus faible (on pourrait l'améliorer avec
   nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
-
-
-
-
-
-
-
-
-
-
-
-
-
-  alphabeta(Joueur, 0, _, _, Grille, E) :- jeu:eval(Grille, Joueur, E), !.
-
-  alphabeta(Joueur, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
-                                           jeu:terminal(Joueur, Grille),
-                                           jeu:terminal(Adv, Grille), jeu:eval(Grille, Joueur, E), !.
-
-
-  alphabeta(Joueur, P, MM, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
-                                             minMaxOppose(MM, MM2),
-                                             P1 is P - 1,
-                                             alphabeta(Joueur, P1, MM2, _, Grille, E), !.
-
-
-  alphabeta(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
-                                            jeu:terminal(Adv, Grille),
-                                            minMaxOppose(MM, MM2),
-                                            P1 is P - 1,
-                                            alphabeta(Joueur, P1, MM2, _, Grille, E), !.
-
-  alphabeta(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
-    %  campAdverse(Joueur, Adv),
-    toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
-    maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
-    P1 is Profondeur - 1,
-    minmaxList(Joueur, P1, min, _, GrilleArr, Es),                %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
-    max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
-    outils:associe(GrilleArr, Es, GrilleEval),
-    include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
-    nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus fort (on pourrait l'améliorer avec
-    nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
-
-
-  alphabeta(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
-    campAdverse(Joueur, Adv),
-    toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
-    maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
-    P1 is Profondeur - 1,
-    minmaxList(Joueur, P1, max, _, GrilleArr, Es),                %On voit ce que peut repondre le joueur pour chacun d'entre eux
-    min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
-    outils:associe(GrilleArr, Es, GrilleEval),
-    include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
-    nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus faible (on pourrait l'améliorer avec
-    nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
-
-
-
-
-
-
-
-
 
 
 
@@ -393,9 +349,6 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 %
 % Ce prédicat determine la valeur du joueur ordinateur (la façon dont est représenté ses pions sur la grille)
 campCPU(o).
-
-
-modeJeu(jco).
 
 
 %% campAdverse(?Val1:any, ?Val2:any)
@@ -488,23 +441,13 @@ moteur(G,[],_) :- jeu:determineGagnant(G).
 
 % cas ou l ordinateur doit jouer
 moteur(Grille, _, Camp) :-
-  modeJeu(jco),
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
   jeu:profondeurMinMax(ProfMinMax),
-  %minmax(Camp, ProfMinMax, max, GrilleArr, Grille, _),
-  alphabeta(Camp, ProfMinMax, max, GrilleArr, Grille, _),
+  minmax(Camp, ProfMinMax, max, -10000, 10000, GrilleArr, Grille, _),
   nl, afficheGrille(GrilleArr), nl,
   toutesLesCasesValides(AutreCamp, GrilleArr, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
-
-% cas ou c est l utilisateur qui joue
-moteur(Grille, ListeCoups, Camp) :-
-  modeJeu(jcj),
-  campCPU(Camp),
-  campAdverse(Camp, CPU),
-  jeu:saisieUnCoup(Grille, Col,Lig),
-  valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
 
 % cas ou c est l utilisateur qui joue
 moteur(Grille, ListeCoups, Camp) :-
@@ -512,7 +455,6 @@ moteur(Grille, ListeCoups, Camp) :-
   campAdverse(Camp, CPU),
   jeu:saisieUnCoup(Grille, Col,Lig),
   valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
-
 
 
 % Si le coup est valide on le joue
