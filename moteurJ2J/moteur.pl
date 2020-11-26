@@ -42,11 +42,7 @@ choixCamp :-
   read(Camp),
   campAdverse(Camp, CPU),
   retractall(campCPU(_)),
-  assert(campCPU(CPU)),
-  retractall(modeJeu(_)),
-  writeln("jcj (Joueur contre Joueur) ou jco (Joueur contre Ordinateur) ?"),
-  read(Mode),
-  assert(modeJeu(Mode)).
+  assert(campCPU(CPU)).
 
 %% lanceJeu(+File:string)
 %
@@ -56,10 +52,11 @@ choixCamp :-
 lanceJeu(File) :-
   loadJeu(File),
   jeu:initJeu,
+  menuPrincipal,
   jeu:grilleDeDepart(G),
   afficheGrille(G),nl,
   choixCamp,
-  campCPU(Adv),
+  %campCPU(Adv),
   campAdverse(Adv, Joueur),
    write("L'ordinateur est les "), write(Adv), write(" et vous etes les "), writeln(Joueur),
    writeln("Quel camp doit debuter la partie ? "),read(Camp),
@@ -392,10 +389,9 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 %% campCPU(?Val:any)
 %
 % Ce prédicat determine la valeur du joueur ordinateur (la façon dont est représenté ses pions sur la grille)
-campCPU(o).
 
-
-modeJeu(jco).
+% TO DO %
+%campCPU(o).
 
 
 %% campAdverse(?Val1:any, ?Val2:any)
@@ -492,8 +488,8 @@ moteur(Grille, _, Camp) :-
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
   jeu:profondeurMinMax(ProfMinMax),
-  %minmax(Camp, ProfMinMax, max, GrilleArr, Grille, _),
-  alphabeta(Camp, ProfMinMax, max, GrilleArr, Grille, _),
+  minmax(Camp, ProfMinMax, max, GrilleArr, Grille, _),
+  %alphabeta(Camp, ProfMinMax, max, GrilleArr, Grille, _),
   nl, afficheGrille(GrilleArr), nl,
   toutesLesCasesValides(AutreCamp, GrilleArr, ListeCoupsNew),
 	moteur(GrilleArr, ListeCoupsNew, AutreCamp).
@@ -514,7 +510,6 @@ moteur(Grille, ListeCoups, Camp) :-
   valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
 
 
-
 % Si le coup est valide on le joue
 valide(Col, Lig, Grille, Camp, CPU, _) :-
   jeu:leCoupEstValide(Camp, Col, Lig, Grille),
@@ -528,3 +523,33 @@ valide(Col, Lig, Grille, Camp, _, ListeCoups) :-
   \+ jeu:leCoupEstValide(Camp, Col, Lig, Grille),
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
+
+% TO DO %
+menuPrincipal :-
+	tab(8),writeln('Menu Principal'),
+	tab(8),writeln('--------------'),
+	tab(6),writeln('1 - Humain vs Humain'),
+	tab(6),writeln('2 - Humain vs CPU'),
+	tab(6),writeln('0 - Quitter'),
+	saisieChoix,!.
+
+% TO DO %
+saisieChoix :-
+	writeln('Choisissez une option (sans oublier le point) : '),
+	read(Choix),
+  lanceChoix(Choix).
+
+% TO DO %
+lanceChoix(0):-
+  tab(10),writeln('A tres bientot...'),
+  abort.
+
+% TO DO %
+lanceChoix(1):-
+  assert(modeJeu(jcj)),
+  writeln('Lancement d une partie Joueur contre Joueur').
+
+% TO DO %
+lanceChoix(2):-
+  assert(modeJeu(jco)),
+  writeln('Lancement d une partie Joueur contre ordinateur').
