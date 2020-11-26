@@ -18,9 +18,9 @@ puissance4 :- lanceJeu('Puissance4/puissance4.pl').
 othello :- lanceJeu('Othello/othello.pl').
 
 
-%% lastFile
+%% lastFile(?CheminDernierFichier:string)
 %
-% Ce predicat est satisfait s'il contient le dernier fichier chargé
+% Ce predicat est satisfait s'il contient le chemin du dernier fichier chargé
 lastFile('').
 
 :- dynamic(lastFile/1).
@@ -249,7 +249,16 @@ minMaxOppose(min, max).
 minMaxOppose(max, min).
 
 
-
+%% minmaxList(+Joueur:any, +Profondeur:int, +MinMax:enum(min, max), ?GrilleArrive:grille, +ListGrille:list, ?ListeEval:list)
+%
+% Ce prédicat permet de faire un appel récursif sur minmax pour une ListeGrille
+%
+% @param Joueur Le joueur qui cherche les meilleurs coups
+% @param Profondeur Le nombre d'hypothèse que l'on va faire en descendant dans l'arbre de recherche
+% @param MinMax Egale à max si on cherche les meilleurs coups, min si on cherche les meilleurs coups pour l'adversaire (les pires pour nous)
+% @param GrilleArrive La grille dans laquelle on a joué le coup
+% @param ListeGrille La liste de grille dans lesquelle on cherche les meilleurs coups
+% @param Eval Les valeurs des meilleurs coups trouvés
 minmaxList(_, _, max, _, [], []) :- !.
 minmaxList(Joueur, Profondeur, max, GrilleFin, [Grille|Grilles], [E|Es]) :-
   minmax(Joueur, Profondeur, max, GrilleFin, Grille, E),
@@ -298,7 +307,7 @@ minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
   toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
   P1 is Profondeur - 1,
-  minmaxList(Joueur, P1, min, _, GrilleArr, Es),           %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
+  minmaxList(Joueur, P1, min, _, GrilleArr, Es),                %On voit ce que peut repondre l'adversaire pour chacun d'entre eux
   max_list(Es, E),                                              %On prend le coup le plus fort pour le joueur (le plus faible pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus forts
@@ -313,7 +322,7 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
   toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
   P1 is Profondeur - 1,
-  minmaxList(Joueur, P1, max, _, GrilleArr, Es),           %On voit ce que peut repondre le joueur pour chacun d'entre eux
+  minmaxList(Joueur, P1, max, _, GrilleArr, Es),                %On voit ce que peut repondre le joueur pour chacun d'entre eux
   min_list(Es, E),                                              %On prend le coup le plus faible pour le joueur (le plus fort pour l'adversaire)
   outils:associe(GrilleArr, Es, GrilleEval),
   include(=([_, E]), GrilleEval, GrilleA),                      %On garde les coups les plus faibles
