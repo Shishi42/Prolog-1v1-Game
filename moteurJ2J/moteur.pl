@@ -1,5 +1,3 @@
-
-
 /** <module> Moteur
  *
  *  Ce module permet de lancer des jeux à 2 joueurs
@@ -12,11 +10,9 @@
                     othello/0
                   ]).
 
-
 ticTacToe :- lanceJeu('TicTacToe/ticTacToe.pl').
 puissance4 :- lanceJeu('Puissance4/puissance4.pl').
 othello :- lanceJeu('Othello/othello.pl').
-
 
 %% lastFile(?CheminDernierFichier:string)
 %
@@ -27,6 +23,7 @@ lastFile('').
 :- dynamic(campCPU/1).
 :- dynamic(modeJeu/1).
 
+
 %% loadFile(+File:string)
 %
 % Ce prédicat permet de charger un fichier de jeu
@@ -35,14 +32,6 @@ lastFile('').
 loadJeu(File) :- lastFile(LastFile), unload_file(LastFile), consult(File),
   retractall(lastFile(LastFile)), assert(lastFile(File)).
 
-
-choixCamp :-
-  writeln("Qui voulez vous jouer ?"),
-  writeln("Les x ou les o ?"),
-  read(Camp),
-  campAdverse(Camp, CPU),
-  retractall(campCPU(_)),
-  assert(campCPU(CPU)).
 
 %% lanceJeu(+File:string)
 %
@@ -56,14 +45,11 @@ lanceJeu(File) :-
   jeu:grilleDeDepart(G),
   afficheGrille(G),nl,
   choixCamp,
-  %campCPU(Adv),
   campAdverse(Adv, Joueur),
-   write("L'ordinateur est les "), write(Adv), write(" et vous etes les "), writeln(Joueur),
-   writeln("Quel camp doit debuter la partie ? "),read(Camp),
+  write("L'ordinateur est les "), write(Adv), write(" et vous etes les "), writeln(Joueur),
+  writeln("Quel camp doit debuter la partie ? "),read(Camp),
   jeu:toutesLesCasesDepart(Camp, ListeCoups),
   moteur(G,ListeCoups,Camp).
-
-
 
 %% afficheLigne(+Ligne:list)
 %
@@ -71,6 +57,7 @@ lanceJeu(File) :-
 %
 % @param Ligne La liste à afficher
 afficheLigne(L, N) :- write(N), tab(2), write("|"), tab(1), afficheLigne2(L).
+
 
 afficheLigne2([]).
 afficheLigne2([A|AS]) :-
@@ -85,11 +72,13 @@ afficheLigne2([A|AS]) :-
 % @param list La liste à afficher
 afficheGrille(G) :- outils:listeNomColonne(LNC), tab(3), write("|"), tab(1), afficheNomColonne(LNC), afficheGrille2(G, 1).
 
+
 afficheGrille2([], _).
 afficheGrille2([A|AS], N) :-
   afficheLigne(A, N), nl,
   N1 is N + 1,
   afficheGrille2(AS, N1).
+
 
 afficheNomColonne([]) :- writeln("").
 afficheNomColonne([C|RNC]) :- write(C), tab(1), write("|"), tab(1), afficheNomColonne(RNC).
@@ -103,10 +92,12 @@ afficheNomColonne([C|RNC]) :- write(C), tab(1), write("|"), tab(1), afficheNomCo
 % Ce prédicat est satisfait quand la Val est égale à la représentation de la case vide
 caseVide(-).
 
+
 %% sizeLine(?Size:int)
 %
 % Ce prédicat est satisfait quand Size est égale à la dernière ligne de la grille du jeu en cours
 sizeLine(S) :- size(S, _ ).
+
 
 %% sizeColumn(?Size:char)
 %
@@ -145,7 +136,7 @@ initSuccAlpha(C, F) :- char_code(C, D), char_code(F, S),
                        assert(succAlpha(C, C1)),
                        initSuccAlpha(C1, F).
 initSuccAlpha(C, F) :- char_code(C, D), char_code(F, S),
-                      D >= S.
+                       D >= S.
 
 
 %% initEquiv(+DebutLigne:int, +DebutColonne:char, +Fin:char)
@@ -154,12 +145,11 @@ initSuccAlpha(C, F) :- char_code(C, D), char_code(F, S),
 % Les predicats equiv/2 sont utilisés pour connaitre la position numérique d'une colonne
 % Par exemple : La colonne c est à la position 3 (c'est la troisième colonne)
 initEquiv(D, C, F) :- char_code(C, DA), char_code(F, SA),
-                         DA =< SA, D1 is D + 1, DA1 is DA + 1,
-                         char_code(C1, DA1),
-                         assert(equiv(C, D)), initEquiv(D1, C1, F).
+                      DA =< SA, D1 is D + 1, DA1 is DA + 1,
+                      char_code(C1, DA1),
+                      assert(equiv(C, D)), initEquiv(D1, C1, F).
 initEquiv(_, C, F) :- char_code(C, DA), char_code(F, SA),
-                         DA >= SA.
-
+                      DA >= SA.
 
 
 %% ligneDeGrille(+NumLigne:int, +Grille:grille, ?Ligne:list).
@@ -171,7 +161,7 @@ initEquiv(_, C, F) :- char_code(C, DA), char_code(F, SA),
 % @param Ligne La ligne numéro NumLigne dans la grille
 ligneDeGrille(1, [Test |_], Test) :- !.
 ligneDeGrille(NumLigne, [_|Reste], Test) :- succNum(I, NumLigne),
-		ligneDeGrille(I, Reste, Test).
+		                                        ligneDeGrille(I, Reste, Test).
 
 
 %% caseDeLigne(+NomColonne:char, +Ligne:list, ?Case:any).
@@ -206,8 +196,6 @@ caseDeGrille(C,L,G, Elt) :- ligneDeGrille(L,G,Res),caseDeLigne(C,Res,Elt).
 afficheCaseDeGrille(C,L,G) :- caseDeGrille(C,L,G,Case),write(Case).
 
 
-
-
 %% coupJoueDansLigne(+NomColonne:char, Val:any, +Ligne:list, ?LigneRetour:list).
 %
 % Ce prédicat permet de jouer un coup dans une ligne
@@ -222,7 +210,6 @@ coupJoueDansLigne(NomCol, Val, [X|Reste1],[X|Reste2]):-
 		coupJoueDansLigne(I, Val, Reste1, Reste2).
 
 
-
 %% coupJoueDansLigne(+NomColonne:char, +NumLigne:int, Val:any, +Grille:grille, ?GrilleRetour:grille).
 %
 % Ce prédicat permet de jouer un coup dans une grille
@@ -234,12 +221,7 @@ coupJoueDansLigne(NomCol, Val, [X|Reste1],[X|Reste2]):-
 % @param GrilleRetour La grille dans laquelle on a joué le coup
 coupJoueDansGrille(NCol,1,Val,[A|Reste],[B|Reste]):- coupJoueDansLigne(NCol, Val, A, B).
 coupJoueDansGrille(NCol, NLig, Val, [X|Reste1], [X|Reste2]):- succNum(I, NLig),
-					coupJoueDansGrille(NCol, I, Val, Reste1, Reste2).
-
-%  ?- coupJoueDansGrille(a,2,x,[[-,-,x],[-,o,-],[x,o,o]],V).
-%  V = [[-,-,x],[x,o,-],[x,o,o]] ;
-%  no
-
+                                                    					coupJoueDansGrille(NCol, I, Val, Reste1, Reste2).
 
 
 %% minMaxOppose(?Val1, ?Val2)
@@ -247,7 +229,6 @@ coupJoueDansGrille(NCol, NLig, Val, [X|Reste1], [X|Reste2]):- succNum(I, NLig),
 % Ce predicat permet de passer de min à max pour l'algorithme minMax
 minMaxOppose(min, max).
 minMaxOppose(max, min).
-
 
 %% minmaxList(+Joueur:any, +Profondeur:int, +MinMax:enum(min, max), ?GrilleArrive:grille, +ListGrille:list, ?ListeEval:list)
 %
@@ -263,7 +244,6 @@ minmaxList(_, _, max, _, [], []) :- !.
 minmaxList(Joueur, Profondeur, max, GrilleFin, [Grille|Grilles], [E|Es]) :-
   minmax(Joueur, Profondeur, max, GrilleFin, Grille, E),
   minmaxList(Joueur, Profondeur, max, _, Grilles, Es).
-
 
 minmaxList(_, _, min, _, [], []) :- !.
 minmaxList(Joueur, Profondeur, min, GrilleFin, [Grille|Grilles], [E|Es]) :-
@@ -287,12 +267,10 @@ minmax(Joueur, _, _, _, Grille, E) :- campAdverse(Joueur, Adv),
                                       jeu:terminal(Joueur, Grille),
                                       jeu:terminal(Adv, Grille), jeu:eval(Grille, Joueur, E), !.
 
-
 minmax(Joueur, P, MM, _, Grille, E) :-  jeu:terminal(Joueur, Grille),
                                         minMaxOppose(MM, MM2),
                                         P1 is P - 1,
                                         minmax(Joueur, P1, MM2, _, Grille, E), !.
-
 
 minmax(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
                                        jeu:terminal(Adv, Grille),
@@ -300,10 +278,7 @@ minmax(Joueur, P, MM, _, Grille, E) :- campAdverse(Joueur, Adv),
                                        P1 is P - 1,
                                        minmax(Joueur, P1, MM2, _, Grille, E), !.
 
-
 minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
-
-%  campAdverse(Joueur, Adv),
   toutesLesCasesValides(Joueur, Grille, ListeCoups),            %On regarde quel coup on peut faire
   maplist(joueLeCoup2(Joueur, Grille), GrilleArr, ListeCoups),  %On les joue
   P1 is Profondeur - 1,
@@ -314,10 +289,7 @@ minmax(Joueur, Profondeur, max, GrilleFin, Grille, E) :-
   nth1(1, GrilleA, GrilleF),                                    %On prend le premier coup le plus fort (on pourrait l'améliorer avec
   nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
-
-
 minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
-
   campAdverse(Joueur, Adv),
   toutesLesCasesValides(Adv, Grille, ListeCoups),               %On regarde quel coup l'adversaire peut faire
   maplist(joueLeCoup2(Adv, Grille), GrilleArr, ListeCoups),     %On les joue
@@ -330,13 +302,12 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
   nth1(1, GrilleF, GrilleFin).                                  % une fonction de prise au hasard)
 
 
-%% campCPU(?Val:any)
-
 %% campAdverse(?Val1:any, ?Val2:any)
 %
 % Ce predicat permet de connaitre l'adversaire d'un autre joueur
 campAdverse(x,o).
 campAdverse(o,x).
+
 
 %% joueLeCoup(+Case:list, +Valeur:any, +GrilleDep:grille, ?GrilleArr:grille)
 %
@@ -352,6 +323,7 @@ joueLeCoup(Case, Valeur, GrilleDep, GrilleArr) :-
 	coupJoueDansGrille(Col, Lig, Valeur, GrilleDep, GrilleArr2),
   jeu:consequencesCoupDansGrille(Col, Lig, Valeur, GrilleArr2, GrilleArr).
 
+
 joueLeCoup2(Valeur, GrilleDep, GrilleArr, Case) :- joueLeCoup(Case, Valeur, GrilleDep, GrilleArr).
 
 
@@ -363,18 +335,15 @@ joueLeCoup2(Valeur, GrilleDep, GrilleArr, Case) :- joueLeCoup(Case, Valeur, Gril
 % @param Liste La liste de valeur à écrire
 % @param Profondeur Une partie du nom du fichier
 ecrireFichMinMax(L,P) :- !,
-              number_string(P, Ps),
-              string_concat("Prof", Ps, F),
-              string_concat(F, ".txt", F1),
-              open(F1, append, X),
-              atomics_to_string(L, ',', L1),
-              write(X,L1),
-              write(X,"\n"),
-              write(X,"\n"),
-              close(X).
-
-
-
+                        number_string(P, Ps),
+                        string_concat("Prof", Ps, F),
+                        string_concat(F, ".txt", F1),
+                        open(F1, append, X),
+                        atomics_to_string(L, ',', L1),
+                        write(X,L1),
+                        write(X,"\n"),
+                        write(X,"\n"),
+                        close(X).
 
 
 %% toutesLesCasesValides(+Camp:any, +Grille:Grille, ?NouveauListeCoups:list)
@@ -387,7 +356,6 @@ ecrireFichMinMax(L,P) :- !,
 toutesLesCasesValides(Camp, Grille, LC2) :-
   outils:toutesLesCases(LC1),
   include(jeu:leCoupEstValide(Camp, Grille), LC1, LC2).
-
 
 
 %% moteur(+Grille:grille, +ListeCoups:list, +Camp:any)
@@ -461,6 +429,9 @@ valide(Col, Lig, Grille, Camp, _, ListeCoups) :-
   write("Coup invalide"), nl,
 	moteur(Grille, ListeCoups, Camp).
 
+
+%%%%%%%%%%%%%%%%% Menus %%%%%%%%%%%%%%%%%
+
 %% menuPrincipal
 %
 % Ce prédicat affiche le menu avec les différents choix
@@ -472,6 +443,7 @@ menuPrincipal :-
 	tab(6),writeln('0 - Quitter'),
 	saisieChoix,!.
 
+
 %% saisieChoix
 %
 % Ce prédicat permet la saisie du choix de l'utilisateur
@@ -480,6 +452,7 @@ saisieChoix :-
   retractall(modeJeu(_)),
 	read(Choix),
   lanceChoix(Choix).
+
 
 %% lanceChoix(?Choix:int)
 %
@@ -494,4 +467,16 @@ lanceChoix(1):-
 
 lanceChoix(2):-
   assert(modeJeu(jco)),
-  writeln('Lancement d une partie Joueur contre ordinateur').
+  writeln('Lancement d une partie Joueur contre Ordinateur').
+
+
+%% choixCamp
+%
+% Ce prédicat demande le camp de l'utilisateur
+choixCamp :-
+  writeln("Qui voulez vous jouer ? (sans oublier le point)"),
+  writeln("Les x ou les o ?"),
+  read(Camp),
+  campAdverse(Camp, CPU),
+  retractall(campCPU(_)),
+  assert(campCPU(CPU)).
