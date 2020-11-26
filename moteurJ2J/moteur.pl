@@ -122,6 +122,7 @@ init(SL, SC) :-
   assert(size(SL, SC)),
   sizeLine(SL), sizeColumn(SC),
   retractall(succNum(_, _)),
+  retractall(succAlpha(_, _)),
   retractall(equiv(_, _)),
   initSuccNum(1, SL),
   initSuccAlpha(a, SC),
