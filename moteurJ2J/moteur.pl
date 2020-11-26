@@ -25,6 +25,7 @@ lastFile('').
 
 :- dynamic(lastFile/1).
 :- dynamic(campCPU/1).
+:- dynamic(modeJeu/1).
 
 %% loadFile(+File:string)
 %
@@ -41,7 +42,11 @@ choixCamp :-
   read(Camp),
   campAdverse(Camp, CPU),
   retractall(campCPU(_)),
-  assert(campCPU(CPU)).
+  assert(campCPU(CPU)),
+  retractall(modeJeu(_)),
+  writeln("jcj (Joueur contre Joueur) ou jco (Joueur contre Ordinateur) ?"),
+  read(Mode),
+  assert(modeJeu(Mode)).
 
 %% lanceJeu(+File:string)
 %
@@ -326,6 +331,9 @@ minmax(Joueur, Profondeur, min, GrilleFin, Grille, E) :-
 campCPU(o).
 
 
+modeJeu(jco).
+
+
 %% campAdverse(?Val1:any, ?Val2:any)
 %
 % Ce predicat permet de connaitre l'adversaire d'un autre joueur
@@ -416,6 +424,7 @@ moteur(G,[],_) :- jeu:determineGagnant(G).
 
 % cas ou l ordinateur doit jouer
 moteur(Grille, _, Camp) :-
+  modeJeu(jco),
 	campCPU(Camp),
   campAdverse(AutreCamp, Camp),
   jeu:profondeurMinMax(ProfMinMax),
@@ -426,10 +435,19 @@ moteur(Grille, _, Camp) :-
 
 % cas ou c est l utilisateur qui joue
 moteur(Grille, ListeCoups, Camp) :-
+  modeJeu(jcj),
+  campCPU(Camp),
+  campAdverse(Camp, CPU),
+  jeu:saisieUnCoup(Grille, Col,Lig),
+  valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
+
+% cas ou c est l utilisateur qui joue
+moteur(Grille, ListeCoups, Camp) :-
   campCPU(CPU),
   campAdverse(Camp, CPU),
   jeu:saisieUnCoup(Grille, Col,Lig),
   valide(Col, Lig, Grille, Camp, CPU, ListeCoups).
+
 
 
 % Si le coup est valide on le joue
