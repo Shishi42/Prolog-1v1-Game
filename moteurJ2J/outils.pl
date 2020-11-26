@@ -15,18 +15,36 @@
                     lignesDeN/3
                   ]).
 
-
+%% modifieGrille(+GrilleDep:grille, +Val:any, +ListeCoups:list, ?GrilleArr:grille)
+%
+% Ce prédicat est satisfait si la GrilleArr correspond à GrilleDep dans laquelle on aurait mis la valeur Val dans
+% les cases de la liste ListeCoups
+%
+% Ce prédicat est utilisé notamment pour la grille de départ de l'othello ou l'on doit mettre 4 pions au départ alors
+% que ce ne sont pas des coups valides (car ils ne mangent aucun pion)
+%
+% @param GrilleDep La grille sans les coups de ListeCoups
+% @param Val La valeur à affecter dans les cases de ListeCoups
+% @param ListeCoups La liste des coups à jouer
+% @param GrilleArr La grille dans laquelle on a joué les coups
 modifieGrille(Grille, _, [], Grille) :- !.
 modifieGrille(GrilleDep, Val, [Case|ListeCoups], GrilleArr) :-  outils:coordonneesOuListe(Col, Lig, Case),
                                                                 moteur:coupJoueDansGrille(Col, Lig, Val, GrilleDep, GrilleArr2),
                                                                 modifieGrille(GrilleArr2, Val, ListeCoups, GrilleArr).
 
-
-remplie2(Es, _, L, Es) :- L =< 0, !.
-remplie2(Es, Val, LG, [Val|Ret]) :-
-  LG1 is LG - 1,
-  remplie2(Es, Val, LG1, Ret).
-
+%% remplie(+Liste:list, +Val:any, +Longueur:int, ListeRetour:list)
+%
+% Ce prédicat est satisfait si la ListeRetour est égale à la Liste à laquelle on a ajoute plusieurs fois
+% la valeur Val pour qu'elle ait une taille Longueur
+%
+% exemple :
+% remplie([a,b,c], 0, 5, L).
+% L = [a,b,c,0,0].
+%
+% @param Liste La liste à remplir
+% @param Val La valeur avec laquelle on remplie
+% @param Longueur La longueur jusqu'à laquelle on doit la remplir
+% @param ListeRetour La Liste remplie 
 remplie(Es, Val, LG, Ret) :-
   reverse(Es, Es2),
   length(Es2, L2),
@@ -34,7 +52,10 @@ remplie(Es, Val, LG, Ret) :-
   remplie2(Es2, Val, LT, Ret2),
   reverse(Ret2, Ret).
 
-
+remplie2(Es, _, L, Es) :- L =< 0, !.
+remplie2(Es, Val, LG, [Val|Ret]) :-
+  LG1 is LG - 1,
+  remplie2(Es, Val, LG1, Ret).
 
 %% ligneDeN(+Val:any, Liste:list, +NbRepetition:int)
 %
