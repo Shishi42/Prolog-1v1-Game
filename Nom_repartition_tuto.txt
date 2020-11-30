@@ -1,0 +1,25 @@
+Binôme : Benjamin Riviere, Mano Brabant.
+
+Mano Brabant :
+- Othello, Puissance4, TicTacToe
+- Documentation
+- MinMax
+- Tentative d'Alpha Beta
+- Generalisation du moteur
+
+Benjamin Riviere :
+- Documentation
+- Menu
+- Tentative d'Alpha Beta
+
+
+Tuto :
+
+Lancer swipl
+
+Tapez la commande : consult('moteurJ2J/moteur.pl').
+
+Lancez à votre guise : 	
+ticTacToe.
+puissance4.
+othello.
